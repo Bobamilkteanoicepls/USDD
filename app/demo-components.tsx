@@ -18,10 +18,11 @@ type RoleSwitchProps = {
 };
 
 export function RoleSwitch({ activeRole, notificationCount = 0, onSwitch }: RoleSwitchProps) {
+  const roleLabels: Record<DemoRole, string> = { becky: "Becky", elijah: "Elijah", public: "Random Juror" };
   return (
     <div className="userSwitch" role="group" aria-label="Choose demo user">
       <small>DEMO USER</small>
-      {(["becky", "elijah"] as DemoRole[]).map((role) => (
+      {(["becky", "elijah", "public"] as DemoRole[]).map((role) => (
         <button
           key={role}
           type="button"
@@ -29,8 +30,8 @@ export function RoleSwitch({ activeRole, notificationCount = 0, onSwitch }: Role
           aria-pressed={activeRole === role}
           onClick={() => onSwitch(role)}
         >
-          <span>{role[0].toUpperCase()}</span>
-          {role === "becky" ? "Becky" : "Elijah"}
+          <span>{role === "public" ? "J" : role[0].toUpperCase()}</span>
+          {roleLabels[role]}
           {role === "elijah" && notificationCount > 0 && (
             <b aria-label={`${notificationCount} unread notices`}>{notificationCount}</b>
           )}
@@ -57,6 +58,12 @@ export function DashboardShell({
   children,
   onSwitch,
 }: DashboardShellProps) {
+  const roleMeta: Record<DemoRole, { initial: string; name: string; eyebrow: string }> = {
+    becky: { initial: "B", name: "Becky", eyebrow: "CLAIMANT DASHBOARD" },
+    elijah: { initial: "E", name: "Elijah", eyebrow: "RESPONDENT DASHBOARD" },
+    public: { initial: "J", name: "Random Juror", eyebrow: "PUBLIC CIVIC DUTY PORTAL" },
+  };
+  const meta = roleMeta[role];
   const isBecky = role === "becky";
   return (
     <motion.section
@@ -67,15 +74,15 @@ export function DashboardShell({
     >
       <div className="roleHead">
         <div className={`demoAvatar ${role}`} aria-hidden="true">
-          {isBecky ? "B" : "E"}
+          {meta.initial}
         </div>
         <div>
-          <small>{eyebrow ?? (isBecky ? "CLAIMANT DASHBOARD" : "RESPONDENT DASHBOARD")}</small>
-          <h3>{title ?? `Welcome, ${isBecky ? "Becky" : "Elijah"}`}</h3>
+          <small>{eyebrow ?? meta.eyebrow}</small>
+          <h3>{title ?? `Welcome, ${meta.name}`}</h3>
           {status && <p>{status}</p>}
         </div>
         <button className="outline" type="button" onClick={onSwitch}>
-          SWITCH TO {isBecky ? "ELIJAH" : "BECKY"} →
+          SWITCH ACCOUNT →
         </button>
       </div>
       {children}
@@ -392,6 +399,7 @@ type AIJudgeVerdictPanelProps = {
   totalVotes: number;
   revealCount: number;
   jurors: Juror[];
+  buttonLabel?: string;
   onContinue: () => void;
 };
 
@@ -402,6 +410,7 @@ export function AIJudgeVerdictPanel({
   totalVotes,
   revealCount,
   jurors,
+  buttonLabel,
   onContinue,
 }: AIJudgeVerdictPanelProps) {
   const label = verdict === "guilty" ? "STILL TRASH" : verdict === "appeal_granted" ? "APPEAL GRANTED" : "SITUATIONSHIP PENDING";
@@ -426,7 +435,7 @@ export function AIJudgeVerdictPanel({
         {reasoning}
       </blockquote>
       <button className="primary" type="button" onClick={onContinue}>
-        {verdict === "guilty" ? "ENROLL IN EX TRAFFIC SCHOOL" : "RETURN TO CASE FILE"} →
+        {buttonLabel ?? (verdict === "guilty" ? "ENROLL IN EX TRAFFIC SCHOOL" : "RETURN TO CASE FILE")} →
       </button>
     </motion.section>
   );

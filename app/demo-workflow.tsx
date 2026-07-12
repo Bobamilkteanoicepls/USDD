@@ -15,6 +15,7 @@ import {
   TrafficSchoolFlow,
   shareCertificate,
 } from "./demo-components";
+import { PublicJuryCourt, PublicJuryDocket } from "./public-jury";
 import {
   DEMO_EVENT_KEY,
   DEMO_QUIZ,
@@ -39,6 +40,7 @@ const services: Array<[DemoCaseState["activeService"], string]> = [
   ["dashboard", "Dashboard"], ["notifications", "Notifications"], ["evidence", "Evidence"],
   ["court", "Traffic Court"], ["school", "Traffic School"], ["record", "Dating Record"], ["documents", "Documents"],
 ];
+const publicServices: Array<[DemoCaseState["activeService"], string]> = [["jury", "Public Docket"], ["court", "Live Court"]];
 
 export default function DemoWorkflow({ onSyncElijah }: Props) {
   const [state, setState] = useState<DemoCaseState>(() => createInitialDemoCase());
@@ -69,7 +71,7 @@ export default function DemoWorkflow({ onSyncElijah }: Props) {
     return () => window.clearTimeout(timer);
   }, [state.hearing.phase, state.hearing.revealCount]);
 
-  const setRole = (role: DemoRole) => {setActiveRole(role);sessionStorage.setItem("usdd-demo-role",role);const next=role === "elijah" && state.notice !== "not_sent" ? "notifications" : "dashboard";setActiveService(next);sessionStorage.setItem("usdd-demo-service",next)};
+  const setRole = (role: DemoRole) => {setActiveRole(role);sessionStorage.setItem("usdd-demo-role",role);const next=role === "public" ? "jury" : role === "elijah" && state.notice !== "not_sent" ? "notifications" : "dashboard";setActiveService(next);sessionStorage.setItem("usdd-demo-service",next)};
   const setService = (service: DemoCaseState["activeService"]) => {setActiveService(service);sessionStorage.setItem("usdd-demo-service",service)};
   const unread = state.notifications.filter((notice) => notice.recipient === activeRole && !notice.read).length;
   const previousCount = state.beckyRecords.length;
@@ -77,6 +79,7 @@ export default function DemoWorkflow({ onSyncElijah }: Props) {
   const guiltyVotes = state.jurors.filter((juror) => juror.vote === "guilty").length;
   const totalVotes = state.jurors.filter((juror) => juror.vote).length;
   const canExpunge = state.verdict?.result === "guilty" && !state.completed.expunged;
+  const visibleServices = activeRole === "public" ? publicServices : services;
   const milestones = useMemo(() => [
     ["Case filed", state.completed.filed], ["Notice served", state.completed.noticed], ["Evidence filed", state.completed.evidence],
     ["Hearing held", state.completed.heard], ["Jury voted", state.completed.voted], ["School completed", state.completed.school], ["Record expunged", state.completed.expunged],
@@ -98,6 +101,7 @@ export default function DemoWorkflow({ onSyncElijah }: Props) {
   const enterCourt = () => { update((s) => s.appeal === "not_filed" ? s : ({ ...s, appeal: "hearing", hearing: { ...s.hearing, phase: "arguments", startedAt: Date.now(), revealCount: 0 }, notifications: [...s.notifications, ...(["becky","elijah"] as DemoRole[]).map((recipient) => ({ id: `hearing-${recipient}-${Date.now()}`, recipient, channel: "in_app" as const, title: "Hearing Now in Session", message: `Traffic Court opened arguments in ${s.caseNumber}.`, createdAt: new Date().toISOString(), read: false }))] })); setService("court"); };
   const openVoting = () => update((s) => ({ ...s, hearing: { ...s.hearing, phase: "voting" }, completed: { ...s.completed, heard: true } }));
   const vote = (jurorId: string, voteValue: Juror["vote"]) => update((s) => ({ ...s, jurors: s.jurors.map((juror) => juror.id === jurorId ? { ...juror, vote: voteValue } : juror) }));
+  const joinPublicJury = () => { update((s) => s.hearing.phase === "decided" ? s : ({ ...s, publicJury: { ...s.publicJury, joined: true, oathAccepted: true, joinedAt: s.publicJury.joinedAt || new Date().toISOString() }, jurors: s.jurors.map((juror) => juror.id === s.publicJury.jurorId ? { ...juror, name: `${s.publicJury.alias} · YOU`, vote: null } : juror) })); setService("court"); };
   const simulateVotes = () => update((s) => ({ ...s, jurors: s.jurors.map((juror, index) => juror.vote ? juror : ({ ...juror, vote: index === 3 ? "not_guilty" : "guilty" })) }));
   const decide = () => update((s) => {
     const voted = s.jurors.filter((juror) => juror.vote);
@@ -131,7 +135,9 @@ export default function DemoWorkflow({ onSyncElijah }: Props) {
   const reset = () => { const fresh = createInitialDemoCase(); setState(fresh); saveDemoCase(fresh); setActiveRole("becky"); sessionStorage.setItem("usdd-demo-role", "becky"); setService("dashboard"); };
   const share = async () => shareCertificate("USDD Expungement Certificate", `Becky’s official relationship count is now ${currentCount}. Fictional case ${state.caseNumber} was expunged.`, window.location.href, () => update((s) => ({ ...s, documents: { ...s.documents, shared: true } })), setShareError);
 
-  const renderDashboard = () => activeRole === "becky" ? (
+  const renderDashboard = () => activeRole === "public" ? (
+    <DashboardShell role="public" onSwitch={() => setRole("becky")} status="Public juror access · One fictional vote per case"><PublicJuryDocket state={state} onJoin={joinPublicJury} onEnterCourt={() => setService("court")}/></DashboardShell>
+  ) : activeRole === "becky" ? (
     <DashboardShell role="becky" onSwitch={() => setRole("elijah")} status={`Official relationships: ${currentCount}`}>
       {!state.completed.filed ? <section className="filing"><span className="formCode">FORM USDD-EX01 · REVIEW BEFORE FILING</span><h2>Classify Elijah as emotional waste</h2><div className="allegations">{state.violations.map((item) => <span key={item}>🚩 {item}</span>)}</div><label>CLAIMANT STATEMENT<textarea value={state.claimant.statement} onChange={(event) => update((s) => ({ ...s, claimant: { ...s.claimant, statement: event.target.value } }))}/></label><button className="dangerBtn" type="button" onClick={fileCase}>FILE & SERVE HAZARDOUS CLASSIFICATION</button></section>
       : <section className="claimantStatus"><h2>Case {state.caseNumber}</h2><p>Becky can review both parties’ evidence, observe the hearing, view the verdict, and expunge Elijah after a final guilty ruling.</p><div className="caseActions"><button className="outline" onClick={() => setService("evidence")}>REVIEW EVIDENCE</button><button className="outline" onClick={() => setService("court")}>OPEN COURTROOM</button>{canExpunge && <button className="dangerBtn" onClick={expunge}>EXPUNGE ELIJAH NOW</button>}</div></section>}
@@ -143,18 +149,20 @@ export default function DemoWorkflow({ onSyncElijah }: Props) {
   );
 
   return <section className="demoShell fullDemo">
-    <div className="demoNotice"><b>⚑ INTERACTIVE DEMO</b><span>Two simulated accounts share one persistent case. Open this site in two tabs to watch updates synchronize.</span><button type="button" onClick={reset}>RESET EVERYTHING</button></div>
+    <div className="demoNotice"><b>⚑ INTERACTIVE DEMO</b><span>Three simulated accounts share one persistent case: claimant, respondent, and a randomly assigned public juror.</span><button type="button" onClick={reset}>RESET EVERYTHING</button></div>
     <div className="demoTop"><div><span>CASE {state.caseNumber}</span><h2>Becky <em>v.</em> Elijah</h2><p>{state.violations.join(" · ")}</p></div><div className={`caseStatus ${state.classification}`}>{state.classification.replaceAll("_", " ").toUpperCase()}</div></div>
     <RoleSwitch activeRole={activeRole} notificationCount={activeRole === "elijah" ? unread : 0} onSwitch={setRole}/>
-    <nav className="caseNav" aria-label="Case services">{services.map(([value, text]) => <button key={value} className={activeService === value ? "active" : ""} onClick={() => setService(value)}>{text}{value === "notifications" && unread > 0 ? <b>{unread}</b> : null}</button>)}</nav>
+    <nav className={`caseNav ${activeRole === "public" ? "publicNav" : ""}`} aria-label="Case services">{visibleServices.map(([value, text]) => <button key={value} className={activeService === value ? "active" : ""} onClick={() => setService(value)}>{text}{value === "notifications" && unread > 0 ? <b>{unread}</b> : null}</button>)}</nav>
     <div className="journey">{milestones.map(([text, done], index) => <span className={done ? "done" : ""} key={text}><i>{done ? "✓" : index + 1}</i>{text.toUpperCase()}</span>)}</div>
 
     {activeService === "dashboard" && renderDashboard()}
+    {activeService === "jury" && <DashboardShell role={activeRole} onSwitch={() => setRole(activeRole === "public" ? "becky" : "public")} eyebrow="USDD PUBLIC JURY SERVICE" title={activeRole === "public" ? "Random Juror Docket" : "Public Court Preview"}><PublicJuryDocket state={state} onJoin={() => { if (activeRole !== "public") setRole("public"); joinPublicJury(); }} onEnterCourt={() => setService("court")}/></DashboardShell>}
     {activeService === "notifications" && <DashboardShell role={activeRole} onSwitch={() => setRole(activeRole === "becky" ? "elijah" : "becky")} eyebrow="USDD NOTIFICATION CENTER" title={`${activeRole === "becky" ? "Becky" : "Elijah"}’s Inbox`}>
       {activeRole === "elijah" && state.notice !== "not_sent" ? <><div className="deliveryChannels">{state.notifications.filter((notice) => notice.title.includes("Classification")).map((notice) => <article key={notice.id}><b>{notice.channel === "email" ? "✉ EMAIL" : notice.channel === "sms" ? "▣ SMS" : "● IN-APP"}</b><span>DELIVERED</span><small>{formatDemoDate(notice.createdAt)}</small></article>)}</div><NotificationInboxCard caseNumber={state.caseNumber} claimantName="Becky" filedAt={formatDemoDate(state.filedAt)} violations={state.violations} isRead={state.notice === "read"} onOpen={markNoticeRead} onAppeal={fileAppeal} onSchool={enrollSchool}/>{state.notifications.filter((notice) => notice.recipient === "elijah" && !notice.title.includes("Classification")).map((notice) => <div className="sentNotice" key={notice.id}><b>{notice.title}</b><span>{notice.message}</span><small>{formatDemoDate(notice.createdAt)}</small></div>)}</> : activeRole === "becky" && state.notifications.some((notice) => notice.recipient === "becky") ? <div className="notificationList">{state.notifications.filter((notice) => notice.recipient === "becky").map((notice) => <div className={`sentNotice ${notice.read ? "read" : ""}`} key={notice.id}><b>{notice.title}</b><span>{notice.message}</span><small>{formatDemoDate(notice.createdAt)}</small></div>)}<button className="outline" onClick={() => update((s) => ({ ...s, notifications: s.notifications.map((notice) => notice.recipient === "becky" ? { ...notice, read: true } : notice) }))}>MARK ALL READ</button></div> : <div className="empty"><b>NO NEW NOTICES</b><p>Official silence. Enjoy it while it lasts.</p></div>}
     </DashboardShell>}
     {activeService === "evidence" && <DashboardShell role={activeRole} onSwitch={() => setRole(activeRole === "becky" ? "elijah" : "becky")} eyebrow="SHARED EVIDENCE CENTER" title={`${activeRole === "becky" ? "Claimant" : "Respondent"} Exhibits`}>{activeRole === "elijah" && state.hearing.phase === "not_started" && <section className="defenseEditor"><span className="formCode">RESPONDENT ARGUMENT</span><label>SELECT DEFENSE<select value={state.respondent.defense} onChange={(event) => update((s) => ({ ...s, respondent: { ...s.respondent, defense: event.target.value } }))}>{["I did not ghost. I was emotionally buffering.","We were never officially exclusive.","I replied eventually.","Mercury was in retrograde.","The plaintiff also left me on read."].map((defense) => <option key={defense}>{defense}</option>)}</select></label><label>ELIJAH’S STATEMENT<textarea value={state.respondent.statement} onChange={(event) => update((s) => ({ ...s, respondent: { ...s.respondent, statement: event.target.value } }))}/></label></section>}<EvidenceUploader evidence={state.evidence} owner={activeRole} disabled={state.hearing.phase !== "not_started"} onAdd={(draft) => addEvidence(activeRole, draft)} onRemove={removeEvidence} onContinue={enterCourt}/></DashboardShell>}
-    {activeService === "court" && <DashboardShell role={activeRole} onSwitch={() => setRole(activeRole === "becky" ? "elijah" : "becky")} eyebrow="COURT OF ROMANTIC APPEALS" title="Becky v. Elijah">
+    {activeService === "court" && activeRole === "public" && <DashboardShell role="public" onSwitch={() => setRole("becky")} eyebrow="PUBLIC JUROR COURTROOM" title="Seat 5 · Becky v. Elijah"><PublicJuryCourt state={state} onVote={vote} onReturn={() => setService("jury")}/></DashboardShell>}
+    {activeService === "court" && activeRole !== "public" && <DashboardShell role={activeRole} onSwitch={() => setRole(activeRole === "becky" ? "elijah" : "becky")} eyebrow="COURT OF ROMANTIC APPEALS" title="Becky v. Elijah">
       {state.appeal === "not_filed" ? <div className="claimantStatus"><h2>No appeal has been filed.</h2><p>{activeRole === "elijah" ? "Open your official notice to file an appeal before entering court." : "The court cannot schedule a hearing until Elijah appeals."}</p>{activeRole === "elijah" && state.notice !== "not_sent" && <button className="primary" onClick={() => setService("notifications")}>OPEN NOTICE & FILE APPEAL</button>}</div> : state.hearing.phase === "not_started" ? <div className="claimantStatus"><h2>Hearing not yet opened.</h2><p>Both parties may file evidence before arguments are sealed.</p><button className="primary" onClick={enterCourt}>OPEN 10-MINUTE HEARING (60-SECOND DEMO)</button></div> : state.hearing.phase === "arguments" ? <LiveHearing durationSeconds={state.hearing.durationSeconds} startedAt={state.hearing.startedAt} claimantStatement={state.claimant.statement} respondentStatement={state.respondent.statement} evidence={state.evidence} jurors={state.jurors} onTimeExpired={openVoting} onSkip={openVoting} onJurorVote={vote}/> : state.hearing.phase === "voting" ? <section className="liveCourt"><div className="courtLive"><span>● JURY VOTING OPEN</span><b>{totalVotes}/5</b><small>AUDIENCE MODE</small></div><h2>Cast five fictional jury votes</h2><p>Invite hackathon judges to choose G or NG, or simulate the remaining ballots.</p><JuryPanel jurors={state.jurors} votingOpen onVote={vote}/><div className="caseActions"><button className="outline" onClick={simulateVotes}>SIMULATE REMAINING VOTES</button><button className="primary" disabled={totalVotes < 5} onClick={decide}>SEAL VOTE & SUMMON AI JUDGE</button></div></section> : state.verdict ? <AIJudgeVerdictPanel verdict={state.verdict.result} reasoning={state.verdict.reasoning} guiltyVotes={guiltyVotes} totalVotes={totalVotes} revealCount={state.hearing.revealCount} jurors={state.jurors} onContinue={state.verdict.result === "guilty" ? enrollSchool : () => setService("dashboard")}/> : null}
     </DashboardShell>}
     {activeService === "school" && <DashboardShell role={activeRole} onSwitch={() => setRole(activeRole === "becky" ? "elijah" : "becky")} eyebrow="EX TRAFFIC SCHOOL" title={activeRole === "elijah" ? "Elijah’s Rehabilitation" : "Becky’s Observer View"}>

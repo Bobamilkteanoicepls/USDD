@@ -5,11 +5,12 @@ import test from "node:test";
 const root = new URL("../", import.meta.url);
 const read = (path) => readFile(new URL(path, root), "utf8");
 
-test("ships the complete shared two-user case workflow", async () => {
-  const [model, workflow, components] = await Promise.all([
+test("ships the complete shared three-user case workflow", async () => {
+  const [model, workflow, components, publicJury] = await Promise.all([
     read("app/demo-case.ts"),
     read("app/demo-workflow.tsx"),
     read("app/demo-components.tsx"),
+    read("app/public-jury.tsx"),
   ]);
 
   assert.match(model, /activeRole: DemoRole/);
@@ -30,6 +31,12 @@ test("ships the complete shared two-user case workflow", async () => {
   assert.match(components, /judgeStampStage/);
   assert.match(components, /stampImpression/);
   assert.match(workflow, /YOU ARE EMOTIONAL WASTE/);
+  assert.match(model, /publicJury:/);
+  assert.match(workflow, /PublicJuryDocket/);
+  assert.match(workflow, /PublicJuryCourt/);
+  assert.match(publicJury, /Cases accepting public judgment/);
+  assert.match(publicJury, /ACCEPT OATH & JOIN JURY POOL/);
+  assert.match(publicJury, /OFFICIAL-ISH BALLOT/);
 });
 
 test("keeps the Vercel static release deployable", async () => {

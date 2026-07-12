@@ -1,4 +1,4 @@
-export type DemoRole = "becky" | "elijah";
+export type DemoRole = "becky" | "elijah" | "public";
 export type CaseClassification = "unfiled" | "hazardous" | "recyclable" | "provisionally_recyclable" | "certified_recyclable" | "expunged";
 export type NoticeState = "not_sent" | "delivered" | "read";
 export type AppealState = "not_filed" | "filed" | "hearing" | "decided";
@@ -44,9 +44,9 @@ export type DatingRecordItem = {
 };
 
 export type DemoCaseState = {
-  version: 4;
+  version: 5;
   activeRole: DemoRole;
-  activeService: "dashboard" | "notifications" | "evidence" | "court" | "school" | "record" | "documents";
+  activeService: "dashboard" | "notifications" | "evidence" | "court" | "school" | "record" | "documents" | "jury";
   caseNumber: string;
   claimant: { name: "Becky"; statement: string };
   respondent: { name: "Elijah"; statement: string; defense: string };
@@ -59,6 +59,7 @@ export type DemoCaseState = {
   evidence: EvidenceItem[];
   hearing: { phase: HearingPhase; startedAt: number | null; durationSeconds: number; revealCount: number };
   jurors: Juror[];
+  publicJury: { joined: boolean; oathAccepted: boolean; alias: string; jurorId: string; joinedAt: string | null };
   verdict: null | { result: "guilty" | "appeal_granted" | "hung_jury"; reasoning: string; decidedAt: string };
   school: { state: SchoolState; lessonIndex: number; questionIndex: number; answers: number[]; score: number; attempts: number };
   documents: { rehabilitationNumber: string | null; rehabilitationIssuedAt: string | null; expungementNumber: string | null; expungementIssuedAt: string | null; shared: boolean };
@@ -67,7 +68,7 @@ export type DemoCaseState = {
 };
 
 const now = () => new Date().toISOString();
-export const DEMO_STORAGE_KEY = "usdd-shared-case-v4";
+export const DEMO_STORAGE_KEY = "usdd-shared-case-v5";
 export const DEMO_EVENT_KEY = "usdd-shared-case-updated";
 
 export const DEMO_QUIZ: QuizQuestion[] = [
@@ -78,7 +79,7 @@ export const DEMO_QUIZ: QuizQuestion[] = [
 
 export function createInitialDemoCase(): DemoCaseState {
   return {
-    version: 4,
+    version: 5,
     activeRole: "becky",
     activeService: "dashboard",
     caseNumber: "EX-2026-00421",
@@ -93,6 +94,7 @@ export function createInitialDemoCase(): DemoCaseState {
     evidence: [],
     hearing: { phase: "not_started", startedAt: null, durationSeconds: 60, revealCount: 0 },
     jurors: ["JuryDutyBae92", "Patricia from HR", "@redflagdetective", "The Group Chat", "A Therapist-ish"].map((name, index) => ({ id: `juror-${index + 1}`, name, vote: null })),
+    publicJury: { joined: false, oathAccepted: false, alias: "@CivicDutyCutie482", jurorId: "juror-5", joinedAt: null },
     verdict: null,
     school: { state: "not_enrolled", lessonIndex: 0, questionIndex: 0, answers: [], score: 0, attempts: 0 },
     documents: { rehabilitationNumber: null, rehabilitationIssuedAt: null, expungementNumber: null, expungementIssuedAt: null, shared: false },
@@ -116,7 +118,7 @@ export function loadDemoCase(): DemoCaseState {
     const raw = localStorage.getItem(DEMO_STORAGE_KEY);
     if (!raw) return createInitialDemoCase();
     const parsed = JSON.parse(raw) as Partial<DemoCaseState>;
-    if (parsed.version !== 4) return createInitialDemoCase();
+    if (parsed.version !== 5) return createInitialDemoCase();
     return { ...createInitialDemoCase(), ...parsed } as DemoCaseState;
   } catch {
     return createInitialDemoCase();
