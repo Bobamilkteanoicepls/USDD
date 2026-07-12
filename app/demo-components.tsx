@@ -313,6 +313,7 @@ export function LiveHearing({
 
   return (
     <section className="liveCourt">
+      <div className="courtroomAtmosphere" aria-hidden="true"><i>🏛️</i><span>COURT OF ROMANTIC APPEALS</span><div><b>👀</b><b>😮</b><b>📝</b><b>🤨</b><b>🍿</b></div></div>
       <div className="courtLive" aria-live="polite">
         <span>● LIVE · FICTIONAL HEARING</span>
         <b>{minutes}:{seconds}</b>
@@ -323,21 +324,20 @@ export function LiveHearing({
         <div><small>THE HONORABLE ALGORITHM PRESIDING</small><strong>AI JUDGE A.L. GORE-ITHM</strong><em>Satirical summary engine · No legal authority</em></div>
         <motion.span className="gavel" aria-label="Judge’s gavel" animate={{ rotate: [0, -32, 8, 0], y: [0, -8, 3, 0] }} transition={{ repeat: Infinity, repeatDelay: 3.2, duration: .65 }}>🔨</motion.span>
       </motion.div>
+      <motion.div className="orderCall" initial={{ opacity: 0, scale: .7 }} animate={{ opacity: [0, 1, 1, 0], scale: [.7, 1.05, 1, .9] }} transition={{ duration: 2.4 }}>ORDER IN THE GROUP CHAT!</motion.div>
       <h2>Becky v. Elijah</h2>
       <div className="arguments">
-        <article>
-          <span>CLAIMANT · BECKY</span>
-          <p>{claimantStatement}</p>
-        </article>
-        <article>
-          <span>RESPONDENT · ELIJAH</span>
-          <p>{respondentStatement}</p>
-        </article>
+        <motion.article className="partyPodium beckyPodium" initial={{ opacity: 0, x: -60 }} animate={{ opacity: 1, x: 0 }} transition={{ type: "spring", delay: .2 }}>
+          <div className="partyAvatar"><span>👩🏻</span><b>B</b></div><div><span>CLAIMANT · BECKY</span><p>{claimantStatement}</p></div><motion.em animate={{ rotate: [-8, 8, -8] }} transition={{ repeat: Infinity, duration: 2 }}>🚩</motion.em>
+        </motion.article>
+        <motion.article className="partyPodium elijahPodium" initial={{ opacity: 0, x: 60 }} animate={{ opacity: 1, x: 0 }} transition={{ type: "spring", delay: .35 }}>
+          <div className="partyAvatar"><span>👨🏽</span><b>E</b></div><div><span>RESPONDENT · ELIJAH</span><p>{respondentStatement}</p></div><motion.em animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>😅</motion.em>
+        </motion.article>
       </div>
       <div className="courtEvidence">
         <b>EVIDENCE BEFORE THE COURT</b>
         {evidence.length ? evidence.map((item, index) => (
-          <span key={item.id}>EXHIBIT {String.fromCharCode(65 + index)} · {item.caption}</span>
+          <motion.span key={item.id} initial={{ opacity: 0, rotate: -5, x: -25 }} animate={{ opacity: 1, rotate: index % 2 ? 2 : -1, x: 0 }} transition={{ delay: .5 + index * .15 }}>📎 EXHIBIT {String.fromCharCode(65 + index)} · {item.caption}</motion.span>
         )) : <span>No exhibits submitted. The group chat remains under subpoena.</span>}
       </div>
       <JuryPanel jurors={jurors} votingOpen={remaining === 0} onVote={onJurorVote} />
@@ -363,6 +363,7 @@ export function JuryPanel({ jurors, votingOpen = false, revealCount = 0, onVote 
         const revealed = index < revealCount;
         return (
           <motion.div key={juror.id} className={revealed ? "voteRevealed" : ""} initial={{ opacity: 0, y: 18 }} animate={revealed ? { opacity: 1, y: 0, scale: [1, 1.1, 1] } : { opacity: 1, y: [0, -3, 0] }} transition={revealed ? { duration: .45 } : { delay: index * .08, y: { repeat: Infinity, duration: 2.4 + index * .15 } }} whileHover={{ y: -7, scale: 1.04 }}>
+            {!revealed && <motion.div className="jurorReaction" animate={{ opacity: [0, 1, 0], y: [5, -8, -15] }} transition={{ repeat: Infinity, repeatDelay: 2 + index * .4, duration: 1.4, delay: index * .35 }}>{["🤔","👀","🧐","💬","☕"][index]}</motion.div>}
             <div className="jurorAvatar"><span>{avatars[index]}</span><i>{index + 1}</i></div>
             <span>{juror.name}</span>
             {!votingOpen && !revealed && <small className="deliberating">REVIEWING <b>•••</b></small>}
@@ -403,13 +404,14 @@ export function AIJudgeVerdictPanel({
   const label = verdict === "guilty" ? "STILL TRASH" : verdict === "appeal_granted" ? "APPEAL GRANTED" : "SITUATIONSHIP PENDING";
   return (
     <motion.section className="demoVerdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className="impactBurst" aria-hidden="true" initial={{ scale: 0, opacity: 1 }} animate={{ scale: 4, opacity: 0 }} transition={{ duration: 1, delay: .65 }}>💥</motion.div>
       <motion.div className="verdictJudge" initial={{ scale: .7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring" }}>
         <div className="judgeAvatar large"><span>⚖</span><b>🤖</b><small>AI</small></div>
         <div><small>THE HONORABLE ALGORITHM</small><strong>AI JUDGE A.L. GORE-ITHM</strong></div>
         <motion.span className="gavel strike" animate={{ rotate: [0, -45, 12, 0], scale: [1, 1.18, 1] }} transition={{ duration: .8, delay: .35 }}>🔨</motion.span>
       </motion.div>
       <span>JURY VOTE · {guiltyVotes}–{Math.max(0, totalVotes - guiltyVotes)}</span>
-      <motion.h2 initial={{ scale: 1.8, rotate: -15 }} animate={{ scale: 1, rotate: -4 }}>{label}</motion.h2>
+      <motion.h2 initial={{ scale: 2.4, rotate: -20, opacity: 0 }} animate={{ scale: [2.4,.88,1.08,1], rotate: [-20,-3,-6,-4], opacity: 1 }} transition={{ duration: .8, delay: .55 }}>{label}</motion.h2>
       <JuryPanel jurors={jurors} revealCount={revealCount} />
       <blockquote>
         <b>AI JUDGE · SATIRICAL SUMMARY, NOT A REAL LEGAL DECISION</b>

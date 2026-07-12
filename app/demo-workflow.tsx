@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
   AIJudgeVerdictPanel,
   DashboardShell,
@@ -124,7 +125,7 @@ export default function DemoWorkflow({ onSyncElijah }: Props) {
     </DashboardShell>
   ) : (
     <DashboardShell role="elijah" onSwitch={() => setRole("becky")} status={`Classification: ${state.classification.replaceAll("_", " ")}`}>
-      {state.notice === "not_sent" ? <div className="empty"><b>NO ACTIVE CASE</b><p>Switch to Becky to file the demonstration case.</p></div> : <div className="claimantStatus"><h2>Respond to case {state.caseNumber}</h2><p>You may open the official notice, file evidence, monitor the court, or enter rehabilitation.</p><div className="caseActions"><button className="primary" onClick={() => setService("notifications")}>OPEN NOTIFICATION INBOX {unread ? `(${unread})` : ""}</button><button className="outline" onClick={() => setService("evidence")}>EVIDENCE CENTER</button><button className="outline" onClick={() => setService("court")}>TRAFFIC COURT</button></div></div>}
+      {state.notice === "not_sent" ? <div className="empty"><b>NO ACTIVE CASE</b><p>Switch to Becky to file the demonstration case.</p></div> : <div className="claimantStatus"><motion.div className={`respondentClassification ${state.classification}`} initial={{ opacity: 0, scale: .92, rotate: -2 }} animate={{ opacity: 1, scale: 1, rotate: 0 }}><span>OFFICIAL USDD CLASSIFICATION</span><h2>{state.classification === "hazardous" ? "YOU ARE EMOTIONAL WASTE" : state.classification === "provisionally_recyclable" ? "REHABILITATION IN PROGRESS" : state.classification === "expunged" ? "CASE EXPUNGED" : "CLASSIFICATION PENDING"}</h2><strong>{state.classification === "hazardous" ? "☣ HAZARDOUS NON-RECYCLABLE" : state.classification.replaceAll("_", " ").toUpperCase()}</strong><p>Assigned by Becky · Case {state.caseNumber}</p><div>{state.violations.map((violation) => <b key={violation}>🚩 {violation}</b>)}</div><small>This is a fictional claimant-submitted classification, not a factual finding.</small></motion.div><h2>Respond to case {state.caseNumber}</h2><p>You may open the official notice, file evidence, monitor the court, or enter rehabilitation.</p><div className="caseActions"><button className="primary" onClick={() => setService("notifications")}>OPEN NOTIFICATION INBOX {unread ? `(${unread})` : ""}</button><button className="outline" onClick={() => setService("evidence")}>EVIDENCE CENTER</button><button className="outline" onClick={() => setService("court")}>TRAFFIC COURT</button></div></div>}
     </DashboardShell>
   );
 
