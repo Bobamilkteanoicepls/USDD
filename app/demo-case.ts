@@ -92,7 +92,7 @@ export function createInitialDemoCase(): DemoCaseState {
     notifications: [],
     appeal: "not_filed",
     evidence: [],
-    hearing: { phase: "not_started", startedAt: null, durationSeconds: 60, revealCount: 0 },
+    hearing: { phase: "not_started", startedAt: null, durationSeconds: 5, revealCount: 0 },
     jurors: ["JuryDutyBae92", "Patricia from HR", "@redflagdetective", "The Group Chat", "A Therapist-ish"].map((name, index) => ({ id: `juror-${index + 1}`, name, vote: null })),
     publicJury: { joined: false, oathAccepted: false, alias: "@CivicDutyCutie482", jurorId: "juror-5", joinedAt: null },
     verdict: null,
@@ -146,6 +146,6 @@ export function issueNumber(prefix: string) {
 
 export function buildNotice(state: DemoCaseState): CaseNotification[] {
   const createdAt = now();
-  const message = `Becky classified you as Hazardous Non-Recyclable in fictional case ${state.caseNumber}. Log in to appeal or enroll in Ex Traffic School.`;
+  const message = `Becky classified you as Hazardous Non-Recyclable in fictional case ${state.caseNumber}. Log in to appeal or enroll in Dating School.`;
   return (["email", "sms", "in_app"] as const).map((channel) => ({ id: `notice-${channel}-${Date.now()}`, recipient: "elijah", channel, title: "Official USDD Classification Notice", message, createdAt, read: false }));
 }

@@ -20,8 +20,8 @@ type RoleSwitchProps = {
 export function RoleSwitch({ activeRole, notificationCount = 0, onSwitch }: RoleSwitchProps) {
   const roleLabels: Record<DemoRole, string> = { becky: "Becky", elijah: "Elijah", public: "Random Juror" };
   return (
-    <div className="userSwitch" role="group" aria-label="Choose demo user">
-      <small>DEMO USER</small>
+    <div className="userSwitch" role="group" aria-label="Switch account">
+      <small>ACCOUNT</small>
       {(["becky", "elijah", "public"] as DemoRole[]).map((role) => (
         <button
           key={role}
@@ -47,7 +47,7 @@ type DashboardShellProps = {
   title?: string;
   status?: string;
   children: React.ReactNode;
-  onSwitch: () => void;
+  onSwitch?: () => void;
 };
 
 export function DashboardShell({
@@ -81,9 +81,11 @@ export function DashboardShell({
           <h3>{title ?? `Welcome, ${meta.name}`}</h3>
           {status && <p>{status}</p>}
         </div>
-        <button className="outline" type="button" onClick={onSwitch}>
-          SWITCH ACCOUNT →
-        </button>
+        {onSwitch && (
+          <button className="outline" type="button" onClick={onSwitch}>
+            SWITCH ACCOUNT →
+          </button>
+        )}
       </div>
       {children}
     </motion.section>
@@ -133,11 +135,11 @@ export function NotificationInboxCard({
       <div className="sentNotice">
         <b>NOTICE OF ROMANTIC MATERIAL CLASSIFICATION</b>
         <span>Response requested before the group chat reaches a verdict.</span>
-        <small>You may appeal with evidence or voluntarily enroll in Ex Traffic School.</small>
+        <small>You may appeal with evidence or voluntarily enroll in Dating School.</small>
       </div>
       {!isRead ? <button className="primary" type="button" onClick={onOpen}>OPEN &amp; ACKNOWLEDGE NOTICE →</button> : <div>
           <button className="primary" type="button" onClick={onAppeal}>FILE AN APPEAL →</button>
-          <button className="outline" type="button" onClick={onSchool}>TAKE TRAFFIC SCHOOL</button>
+          <button className="outline" type="button" onClick={onSchool}>GO TO DATING SCHOOL</button>
         </div>}
     </motion.article>
   );
@@ -176,15 +178,15 @@ export function EvidenceUploader({
     setError("");
     if (!next) return;
     if (evidence.length >= 3) {
-      setError("The local demo cabinet is full. Withdraw an exhibit before filing another.");
+      setError("The evidence cabinet is full. Withdraw an exhibit before filing another.");
       return;
     }
     if (!next.type.startsWith("image/")) {
-      setError("USDD accepts screenshot images only for this demonstration.");
+      setError("USDD accepts screenshot images only.");
       return;
     }
     if (next.size > 1200 * 1024) {
-      setError("Exhibit exceeds the 1.2 MB local-demo evidence allowance.");
+      setError("Exhibit exceeds the 1.2 MB evidence allowance.");
       return;
     }
     const reader = new FileReader();
@@ -211,7 +213,7 @@ export function EvidenceUploader({
     <section className="evidenceCenter">
       <span className="formCode">RESPONDENT EVIDENCE PORTAL · FORM EXH-12</span>
       <h2>Build your defense file</h2>
-      <p>Upload fictional demo screenshots only. Avoid real names, phone numbers, or private messages.</p>
+      <p>Upload fictional screenshots only. Avoid real names, phone numbers, or private messages.</p>
 
       <label className="upload">
         ＋ SELECT SCREENSHOT EXHIBIT
@@ -272,7 +274,7 @@ export function EvidenceUploader({
       </div>
 
       <button className="primary wide" type="button" disabled={disabled} onClick={onContinue}>
-        SEAL EVIDENCE & ENTER TRAFFIC COURT →
+        SEAL EVIDENCE &amp; ENTER DATING COURT →
       </button>
     </section>
   );
@@ -327,7 +329,7 @@ export function LiveHearing({
       <div className="courtLive" aria-live="polite">
         <span>● LIVE · FICTIONAL HEARING</span>
         <b>{minutes}:{seconds}</b>
-        <small>DEMO REPRESENTATION OF A 10-MINUTE HEARING</small>
+        <small>10-MINUTE HEARING WINDOW</small>
       </div>
       <motion.div className="judgeBench" initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }}>
         <div className="judgeAvatar"><span>⚖</span><b>🤖</b><small>AI</small></div>
@@ -352,7 +354,7 @@ export function LiveHearing({
       </div>
       <JuryPanel jurors={jurors} votingOpen={remaining === 0} onVote={onJurorVote} />
       <button className="primary wide" type="button" onClick={onSkip}>
-        {remaining > 0 ? "DEMO MODE: CLOSE ARGUMENTS EARLY" : "REVEAL JURY VOTE"} →
+        {remaining > 0 ? "CLOSE ARGUMENTS" : "REVEAL JURY VOTE"} →
       </button>
     </section>
   );
@@ -435,7 +437,7 @@ export function AIJudgeVerdictPanel({
         {reasoning}
       </blockquote>
       <button className="primary" type="button" onClick={onContinue}>
-        {buttonLabel ?? (verdict === "guilty" ? "ENROLL IN EX TRAFFIC SCHOOL" : "RETURN TO CASE FILE")} →
+        {buttonLabel ?? (verdict === "guilty" ? "ENROLL IN DATING SCHOOL" : "RETURN TO CASE FILE")} →
       </button>
     </motion.section>
   );
@@ -491,7 +493,7 @@ export function TrafficSchoolFlow({
     const lesson = LESSONS[lessonIndex];
     return (
       <section className="training">
-        <div className="schoolLogo">USDD EX TRAFFIC SCHOOL<small>ACCREDITED BY ABSOLUTELY NO ONE</small></div>
+        <div className="schoolLogo">USDD DATING SCHOOL<small>ACCREDITED BY ABSOLUTELY NO ONE</small></div>
         <span className="formCode">MODULE {lessonIndex + 1} OF {LESSONS.length}</span>
         <motion.div aria-hidden="true" animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>📚</motion.div>
         <h2>{lesson[0]}</h2>
@@ -566,7 +568,7 @@ export function RehabilitationDocuments({
         <h2>Certificate of Romantic Rehabilitation</h2>
         <p>This certifies that</p>
         <h3>{name.toUpperCase()}</h3>
-        <p>completed Ex Traffic School and is eligible to re-enter the dating ecosystem under supervision.</p>
+        <p>completed Dating School and is eligible to re-enter the dating ecosystem under supervision.</p>
         <strong>90-DAY NO-GHOSTING PROBATION</strong>
         <div>
           <span>CASE NUMBER<b>{caseNumber}</b></span>
