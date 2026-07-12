@@ -28,15 +28,15 @@ export function PublicJuryDocket({ state, onJoin, onEnterCourt }: DocketProps) {
   return (
     <section className="publicJuryPage">
       <motion.header className="juryHero" initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }}>
-        <div><span>USDD CIVIC DUTY PORTAL · PUBLIC ACCESS</span><h2>You have been randomly selected for internet jury duty.</h2><p>No expertise, context, or emotional maturity was detected or required.</p></div>
+        <div><span>USDD CIVIC DUTY PORTAL · COMMUNITY ACCESS</span><h2>You have been summoned for community jury duty.</h2><p>No expertise, context, or emotional maturity was detected or required.</p></div>
         <motion.div className="civicBadge" animate={{ rotate: [-3, 2, -3] }} transition={{ repeat: Infinity, duration: 4 }}><b>🧑‍⚖️</b><span>JUROR ID</span><strong>482-RED-FLAG</strong><small>{state.publicJury.alias}</small></motion.div>
       </motion.header>
 
-      <div className="juryExplainer" aria-label="Public juror journey">
-        {["Browse live docket", "Accept the oath", "Review both sides", "Cast one ballot", "Watch the stamp fall"].map((step, index) => <span key={step}><i>{index + 1}</i>{step}</span>)}
+      <div className="juryExplainer" aria-label="Community juror journey">
+        {["Browse ongoing cases", "Accept the oath", "Review both sides", "Cast one ballot", "Watch the stamp fall"].map((step, index) => <span key={step}><i>{index + 1}</i>{step}</span>)}
       </div>
 
-      <div className="docketHeading"><div><span>COURT OF ROMANTIC APPEALS</span><h2>Cases accepting public judgment</h2><p>All parties, evidence, and outcomes are fictional demo material.</p></div><div><b>3</b><small>PUBLIC CASES</small></div></div>
+      <div className="docketHeading"><div><span>COURT OF ROMANTIC APPEALS</span><h2>Cases accepting community judgment</h2><p>All parties, evidence, and outcomes are fictional.</p></div><div><b>3</b><small>COMMUNITY DOCKETS</small></div></div>
 
       <div className="publicDocketGrid">
         <motion.article className="publicCase featured" whileHover={{ y: -5 }}>
@@ -53,7 +53,7 @@ export function PublicJuryDocket({ state, onJoin, onEnterCourt }: DocketProps) {
         <article className="publicCase compact"><div className="caseRibbon"><span className="live">● LIVE NOW</span><b>EX-2026-00666</b></div><div className="miniPeople">🧑🏾‍🦱 <em>v.</em> 👩🏼</div><h3>Maya v. Tyler</h3><p>Unauthorized “u up?” transmission after 1:00 a.m.</p><div className="caseCrowd"><span>👀 306 WATCHING</span><span>🔒 JURY FULL</span></div><button className="outline wide" disabled>WATCH-ONLY GALLERY FULL</button></article>
         <article className="publicCase compact"><div className="caseRibbon"><span className="ready">HEARING IN 08:42</span><b>EX-2026-00999</b></div><div className="miniPeople">👩🏽 <em>v.</em> 🧔🏻</div><h3>Jordan v. Chris</h3><p>Three consecutive “haha” replies with no follow-up question.</p><div className="caseCrowd"><span>👀 87 WAITING</span><span>🪑 0 SEATS</span></div><button className="outline wide" disabled>JOIN WAITLIST · #4,281</button></article>
       </div>
-      <div className="juryFinePrint"><b>PUBLIC JURY SAFETY NOTICE</b><p>Do not use real names, private screenshots, or this website to harass anyone. The public jury is a satirical hackathon simulation, not a real adjudication system.</p></div>
+      <div className="juryFinePrint"><b>COMMUNITY JURY SAFETY NOTICE</b><p>Do not use real names, private screenshots, or this website to harass anyone. The community jury is a satirical civic simulation, not a real adjudication system.</p></div>
     </section>
   );
 }
@@ -78,14 +78,14 @@ export function PublicJuryCourt({ state, onVote, onReturn }: CourtProps) {
     return () => window.clearInterval(timer);
   }, [remaining, state.hearing.phase]);
 
-  if (!state.publicJury.joined) return <section className="juryGate"><span>⚖</span><h2>No jury assignment found.</h2><p>Return to the public docket and accept the fictional civic oath first.</p><button className="primary" onClick={onReturn}>RETURN TO PUBLIC DOCKET</button></section>;
+  if (!state.publicJury.joined) return <section className="juryGate"><span>⚖</span><h2>No jury assignment found.</h2><p>Return to the ongoing cases board and accept the community juror oath first.</p><button className="primary" onClick={onReturn}>RETURN TO ONGOING CASES</button></section>;
 
-  if (state.verdict && state.hearing.phase === "decided") return <section className="publicVerdictWrap"><div className="publicIdentityBar"><span>🧑‍⚖️ {state.publicJury.alias}</span><b>SEAT 5 · COURT ADJOURNED</b></div><AIJudgeVerdictPanel verdict={state.verdict.result} reasoning={state.verdict.reasoning} guiltyVotes={guiltyVotes} totalVotes={totalVotes} revealCount={state.hearing.revealCount} jurors={state.jurors} buttonLabel="RETURN TO PUBLIC DOCKET" onContinue={onReturn}/></section>;
+  if (state.verdict && state.hearing.phase === "decided") return <section className="publicVerdictWrap"><div className="publicIdentityBar"><span>🧑‍⚖️ {state.publicJury.alias}</span><b>SEAT 5 · COURT ADJOURNED</b></div><AIJudgeVerdictPanel verdict={state.verdict.result} reasoning={state.verdict.reasoning} guiltyVotes={guiltyVotes} totalVotes={totalVotes} revealCount={state.hearing.revealCount} jurors={state.jurors} buttonLabel="RETURN TO ONGOING CASES" onContinue={onReturn}/></section>;
 
   return (
     <section className="publicCourtView">
-      <div className="publicIdentityBar"><span>🧑‍⚖️ {state.publicJury.alias}</span><b>ASSIGNED JUROR · SEAT 5</b><small>{state.caseNumber}</small></div>
-      <div className="publicCourtLive"><span>{state.hearing.phase === "arguments" ? "● LIVE ARGUMENTS" : state.hearing.phase === "voting" ? "● BALLOT WINDOW OPEN" : "PRE-HEARING LOBBY"}</span><strong>{state.hearing.phase === "arguments" ? `${String(Math.floor(remaining / 60)).padStart(2,"0")}:${String(remaining % 60).padStart(2,"0")}` : state.hearing.phase === "voting" ? `${totalVotes}/5 SEALED` : "COURT PENDING"}</strong><small>PUBLIC FEED · 12 SECOND DELAY-ISH</small></div>
+      <div className="publicIdentityBar"><span>🧑‍⚖️ {state.publicJury.alias}</span><b>COMMUNITY JUROR · SEAT 5</b><small>{state.caseNumber}</small></div>
+      <div className="publicCourtLive"><span>{state.hearing.phase === "arguments" ? "● LIVE ARGUMENTS" : state.hearing.phase === "voting" ? "● BALLOT WINDOW OPEN" : "PRE-HEARING LOBBY"}</span><strong>{state.hearing.phase === "arguments" ? `${String(Math.floor(remaining / 60)).padStart(2,"0")}:${String(remaining % 60).padStart(2,"0")}` : state.hearing.phase === "voting" ? `${totalVotes}/5 SEALED` : "COURT PENDING"}</strong><small>COMMUNITY FEED · 12 SECOND DELAY-ISH</small></div>
       <div className="publicJudgeBench"><motion.span animate={{ rotate: [0,-28,5,0] }} transition={{ repeat: Infinity, repeatDelay: 3 }}>🔨</motion.span><div><b>🤖 AI JUDGE A.L. GORE-ITHM</b><small>THE HONORABLE ALGORITHM PRESIDING</small></div><em>⚖</em></div>
 
       <div className="jurorCaseBrief">
@@ -99,11 +99,11 @@ export function PublicJuryCourt({ state, onVote, onReturn }: CourtProps) {
       <div className="galleryReactions"><span>PUBLIC GALLERY REACTIONS</span>{["👀","🍿","😮","🚩"].map((emoji) => <button key={emoji} type="button" aria-label={`React ${emoji}`} onClick={() => { setReaction(""); window.requestAnimationFrame(() => setReaction(emoji)); }}>{emoji}</button>)}<AnimatePresence>{reaction && <motion.b key={reaction} initial={{ opacity: 0, y: 15, scale: .5 }} animate={{ opacity: 1, y: -22, scale: 1.4 }} exit={{ opacity: 0 }} transition={{ duration: .7 }}>{reaction}</motion.b>}</AnimatePresence></div>
 
       <section className={`publicBallot ${state.hearing.phase === "voting" ? "open" : "locked"}`}>
-        <div><span>OFFICIAL-ISH BALLOT · SEAT 5</span><h2>{assignedJuror?.vote ? "Your vote is sealed." : state.hearing.phase === "voting" ? "The internet requests your judgment." : "Ballot locked until arguments close."}</h2><p>{assignedJuror?.vote ? `You voted ${assignedJuror.vote.replaceAll("_"," ").toUpperCase()}. Your choice cannot be edited after sealing.` : "Vote on the fictional classification—not on anyone’s real character."}</p></div>
-        {state.hearing.phase === "voting" && !assignedJuror?.vote && <div className="ballotChoices"><button className="guiltyVote" type="button" onClick={() => onVote(state.publicJury.jurorId,"guilty")}>🚩 STILL TRASH<small>UPHOLD CLASSIFICATION</small></button><button className="clearVote" type="button" onClick={() => onVote(state.publicJury.jurorId,"not_guilty")}>♻ APPEAL GRANTED<small>OVERTURN CLASSIFICATION</small></button></div>}
+        <div><span>OFFICIAL-ISH BALLOT · SEAT 5</span><h2>{assignedJuror?.vote ? "Your vote is sealed." : state.hearing.phase === "voting" ? "The community requests your judgment." : "Ballot locked until arguments close."}</h2><p>{assignedJuror?.vote ? `You voted ${assignedJuror.vote.replaceAll("_"," ").toUpperCase()}. Your choice cannot be edited after sealing.` : "Vote on the fictional classification—not on anyone’s real character."}</p></div>
+        {state.hearing.phase === "voting" && !assignedJuror?.vote && <div className="ballotChoices"><button className="guiltyVote" type="button" onClick={() => onVote(state.publicJury.jurorId,"guilty")}>🚩 STILL GUILTY<small>UPHOLD CLASSIFICATION</small></button><button className="clearVote" type="button" onClick={() => onVote(state.publicJury.jurorId,"not_guilty")}>♻ APPEAL GRANTED<small>OVERTURN CLASSIFICATION</small></button></div>}
         {assignedJuror?.vote && <motion.div className="sealedBallot" initial={{ scale: 1.8, rotate: -15, opacity: 0 }} animate={{ scale: 1, rotate: -5, opacity: 1 }}>VOTE SEALED<small>THANK YOU FOR YOUR QUESTIONABLE CIVIC SERVICE</small></motion.div>}
       </section>
-      <button className="outline" type="button" onClick={onReturn}>← RETURN TO PUBLIC DOCKET</button>
+      <button className="outline" type="button" onClick={onReturn}>← RETURN TO ONGOING CASES</button>
     </section>
   );
 }

@@ -4,6 +4,7 @@ export type NoticeState = "not_sent" | "delivered" | "read";
 export type AppealState = "not_filed" | "filed" | "hearing" | "decided";
 export type HearingPhase = "not_started" | "arguments" | "voting" | "decided";
 export type SchoolState = "not_enrolled" | "lessons" | "exam" | "failed" | "passed";
+export type WorkflowService = "court" | "school";
 
 export type EvidenceItem = {
   id: string;
@@ -46,7 +47,7 @@ export type DatingRecordItem = {
 export type DemoCaseState = {
   version: 5;
   activeRole: DemoRole;
-  activeService: "dashboard" | "notifications" | "evidence" | "court" | "school" | "record" | "documents" | "jury";
+  activeService: "dashboard" | "notifications" | "evidence" | "court" | "school" | "record" | "jury";
   caseNumber: string;
   claimant: { name: "Becky"; statement: string };
   respondent: { name: "Elijah"; statement: string; defense: string };
@@ -92,7 +93,7 @@ export function createInitialDemoCase(): DemoCaseState {
     notifications: [],
     appeal: "not_filed",
     evidence: [],
-    hearing: { phase: "not_started", startedAt: null, durationSeconds: 60, revealCount: 0 },
+    hearing: { phase: "not_started", startedAt: null, durationSeconds: 5, revealCount: 0 },
     jurors: ["JuryDutyBae92", "Patricia from HR", "@redflagdetective", "The Group Chat", "A Therapist-ish"].map((name, index) => ({ id: `juror-${index + 1}`, name, vote: null })),
     publicJury: { joined: false, oathAccepted: false, alias: "@CivicDutyCutie482", jurorId: "juror-5", joinedAt: null },
     verdict: null,
@@ -129,7 +130,7 @@ export function caseAwareReasoning(state: DemoCaseState) {
   const guiltyVotes = state.jurors.filter((juror) => juror.vote === "guilty").length;
   const exhibitText = state.evidence.length === 1 ? "one screenshot exhibit" : `${state.evidence.length} screenshot exhibits`;
   const captions = state.evidence.length ? ` Filed exhibits were described as: ${state.evidence.map((item) => item.caption).join("; ")}.` : "";
-  return `The simulated court reviewed ${exhibitText}, Becky’s statement (“${state.claimant.statement}”), Elijah’s response (“${state.respondent.statement}”), the allegation of ${state.violations[0].toLowerCase()}, and Elijah’s defense that “${state.respondent.defense}”${captions} The five-person jury returned ${guiltyVotes} guilty vote${guiltyVotes === 1 ? "" : "s"}. USDD therefore finds that emotional buffering is not a recognized substitute for communication. This is a fictional demonstration outcome, not a factual finding.`;
+  return `The Court of Romantic Appeals reviewed ${exhibitText}, Becky’s statement (“${state.claimant.statement}”), Elijah’s response (“${state.respondent.statement}”), the allegation of ${state.violations[0].toLowerCase()}, and Elijah’s defense that “${state.respondent.defense}”${captions} The five-person jury returned ${guiltyVotes} guilty vote${guiltyVotes === 1 ? "" : "s"}. USDD therefore finds that emotional buffering is not a recognized substitute for communication. This is a fictional outcome, not a factual finding.`;
 }
 
 export function officialRelationshipCount(state: DemoCaseState) {
@@ -146,6 +147,6 @@ export function issueNumber(prefix: string) {
 
 export function buildNotice(state: DemoCaseState): CaseNotification[] {
   const createdAt = now();
-  const message = `Becky classified you as Hazardous Non-Recyclable in fictional case ${state.caseNumber}. Log in to appeal or enroll in Ex Traffic School.`;
+  const message = `Becky classified you as Hazardous Non-Recyclable in fictional case ${state.caseNumber}. Request a Dating Court hearing or enroll in Dating School.`;
   return (["email", "sms", "in_app"] as const).map((channel) => ({ id: `notice-${channel}-${Date.now()}`, recipient: "elijah", channel, title: "Official USDD Classification Notice", message, createdAt, read: false }));
 }
