@@ -30,6 +30,9 @@ test("ships the complete shared three-user case workflow", async () => {
   assert.match(components, /navigator\.clipboard\.writeText/);
   assert.match(components, /judgeStampStage/);
   assert.match(components, /stampImpression/);
+  assert.match(components, /CertificateStamp/);
+  assert.match(components, /PROVISIONALLY RECYCLABLE/);
+  assert.match(components, /RECORD EXPUNGED/);
   assert.match(workflow, /YOU ARE EMOTIONAL WASTE/);
   assert.match(model, /publicJury:/);
   assert.match(workflow, /PublicJuryDocket/);

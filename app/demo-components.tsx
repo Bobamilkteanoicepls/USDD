@@ -533,6 +533,23 @@ type RehabilitationDocumentsProps = {
   onReturn: () => void;
 };
 
+function CertificateStamp({ label, tone, division }: { label: string; tone: "green" | "blue"; division: string }) {
+  return (
+    <div className={`certificateStampCeremony ${tone}`} aria-label={`Certificate stamped ${label}`}>
+      <motion.div className="certificateStampHandle" initial={{ y: -125, rotate: -16 }} animate={{ y: [-125, 14, -10, 0], rotate: [-16, 3, -3, 0] }} transition={{ duration: .9, delay: .45, times: [0,.57,.78,1], type: "tween" }}>
+        <span>USDD</span><b>♥</b><small>AUTHORIZED</small>
+      </motion.div>
+      <motion.div className="certificateStampMark" initial={{ opacity: 0, scale: 1.65, rotate: -18 }} animate={{ opacity: [0,0,1], scale: [1.65,1.65,1], rotate: [-18,-18,-7] }} transition={{ duration: 1.3, delay: .18 }}>
+        <span>★ UNITED STATES DEPARTMENT OF DATING ★</span>
+        <strong>{label}</strong>
+        <small>{division} · OFFICIAL-ISH</small>
+      </motion.div>
+      <motion.div className="certificateInkBurst" aria-hidden="true" initial={{ opacity: 0, scale: .2 }} animate={{ opacity: [0,0,1,0], scale: [.2,.2,1.3,2.1], rotate: [0,0,8,15] }} transition={{ duration: 1.25, delay: .72 }}>✦　•　✷　•　✦</motion.div>
+      <motion.span className="certificateImpact" aria-hidden="true" initial={{ opacity: 0, scale: .2 }} animate={{ opacity: [0,0,1,0], scale: [.2,.2,2.2,3] }} transition={{ duration: .9, delay: .72 }}>💥</motion.span>
+    </div>
+  );
+}
+
 export function RehabilitationDocuments({
   name,
   caseNumber,
@@ -544,8 +561,7 @@ export function RehabilitationDocuments({
 }: RehabilitationDocumentsProps) {
   return (
     <section className="rehabCert">
-      <motion.b initial={{ scale: 2, rotate: -20 }} animate={{ scale: 1, rotate: -6 }}>PROVISIONALLY RECYCLABLE</motion.b>
-      <div className="demoCertificate">
+      <motion.div className="demoCertificate stampedCertificate" animate={{ x: [0,0,-7,6,-3,0], rotate: [0,0,-.4,.35,-.15,0] }} transition={{ duration: 1.35, times: [0,.72,.78,.84,.91,1] }}>
         <small>UNITED STATES DEPARTMENT OF DATING</small>
         <h2>Certificate of Romantic Rehabilitation</h2>
         <p>This certifies that</p>
@@ -557,7 +573,8 @@ export function RehabilitationDocuments({
           <span>CERTIFICATE<b>{certificateNumber}</b></span>
           <span>ISSUED<b>{issuedAt}</b></span>
         </div>
-      </div>
+        <CertificateStamp label="PROVISIONALLY RECYCLABLE" tone="green" division="ROMANTIC REHABILITATION DIVISION" />
+      </motion.div>
       <div className="datingLicense">
         <div className="licenseTop"><span>♥</span><span>USDD<br /><b>PROVISIONAL LICENSE TO DATE</b></span><em>CLASS P</em></div>
         <div className="licenseBody">
@@ -570,6 +587,7 @@ export function RehabilitationDocuments({
             </div>
           </div>
         </div>
+        <motion.div className="licenseEmboss" initial={{ opacity: 0, scale: 1.8, rotate: 15 }} animate={{ opacity: 1, scale: 1, rotate: -8 }} transition={{ delay: 1.45, type: "spring" }}>♻<small>USDD<br/>PROVISIONAL</small></motion.div>
       </div>
       <div className="licenseActions">
         <button className="outline" type="button" onClick={onPrint}>↓ PRINT / SAVE DOCUMENTS</button>
@@ -609,7 +627,7 @@ export function ExpungementCertificate({
       <motion.div className="countDrop" initial={{ scale: 1.35 }} animate={{ scale: 1 }}>
         <span>OFFICIAL RELATIONSHIP COUNT</span><del>{previousCount}</del><b>{officialCount}</b>
       </motion.div>
-      <div className="demoCertificate">
+      <motion.div className="demoCertificate stampedCertificate expungementPaper" animate={{ x: [0,0,-7,6,-3,0], rotate: [0,0,-.4,.35,-.15,0] }} transition={{ duration: 1.35, times: [0,.72,.78,.84,.91,1] }}>
         <small>UNITED STATES DEPARTMENT OF DATING</small>
         <h2>Certificate of Dating Record Expungement</h2>
         <p>This certifies that <b>{holderName.toUpperCase()}</b> has lawfully-ish expunged</p>
@@ -621,7 +639,8 @@ export function ExpungementCertificate({
           <span>OFFICIAL COUNT<b>{officialCount}</b></span>
           <span>ISSUED<b>{issuedAt}</b></span>
         </div>
-      </div>
+        <CertificateStamp label="RECORD EXPUNGED" tone="blue" division="PERMANENT DATING RECORDS OFFICE" />
+      </motion.div>
       <div className="licenseActions">
         <button className="outline" type="button" onClick={onPrint}>↓ PRINT / SAVE</button>
         <button className="primary" type="button" onClick={onShare}>↗ SHARE CERTIFICATE</button>
