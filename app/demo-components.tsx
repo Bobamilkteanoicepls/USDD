@@ -318,6 +318,11 @@ export function LiveHearing({
         <b>{minutes}:{seconds}</b>
         <small>DEMO REPRESENTATION OF A 10-MINUTE HEARING</small>
       </div>
+      <motion.div className="judgeBench" initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }}>
+        <div className="judgeAvatar"><span>⚖</span><b>🤖</b><small>AI</small></div>
+        <div><small>THE HONORABLE ALGORITHM PRESIDING</small><strong>AI JUDGE A.L. GORE-ITHM</strong><em>Satirical summary engine · No legal authority</em></div>
+        <motion.span className="gavel" aria-label="Judge’s gavel" animate={{ rotate: [0, -32, 8, 0], y: [0, -8, 3, 0] }} transition={{ repeat: Infinity, repeatDelay: 3.2, duration: .65 }}>🔨</motion.span>
+      </motion.div>
       <h2>Becky v. Elijah</h2>
       <div className="arguments">
         <article>
@@ -351,15 +356,16 @@ type JuryPanelProps = {
 };
 
 export function JuryPanel({ jurors, votingOpen = false, revealCount = 0, onVote }: JuryPanelProps) {
+  const avatars = ["👩🏾", "🧑🏻", "👨🏼", "👩🏻", "🧑🏽"];
   return (
     <div className="jurySeats" aria-label="Five-person fictional jury">
       {jurors.slice(0, 5).map((juror, index) => {
         const revealed = index < revealCount;
         return (
-          <motion.div key={juror.id} animate={revealed ? { scale: [1, 1.08, 1] } : undefined}>
-            <i>{index + 1}</i>
+          <motion.div key={juror.id} className={revealed ? "voteRevealed" : ""} initial={{ opacity: 0, y: 18 }} animate={revealed ? { opacity: 1, y: 0, scale: [1, 1.1, 1] } : { opacity: 1, y: [0, -3, 0] }} transition={revealed ? { duration: .45 } : { delay: index * .08, y: { repeat: Infinity, duration: 2.4 + index * .15 } }} whileHover={{ y: -7, scale: 1.04 }}>
+            <div className="jurorAvatar"><span>{avatars[index]}</span><i>{index + 1}</i></div>
             <span>{juror.name}</span>
-            {!votingOpen && !revealed && <small>REVIEWING</small>}
+            {!votingOpen && !revealed && <small className="deliberating">REVIEWING <b>•••</b></small>}
             {votingOpen && onVote && !juror.vote && (
               <div>
                 <button type="button" onClick={() => onVote(juror.id, "guilty")}>G</button>
@@ -397,6 +403,11 @@ export function AIJudgeVerdictPanel({
   const label = verdict === "guilty" ? "STILL TRASH" : verdict === "appeal_granted" ? "APPEAL GRANTED" : "SITUATIONSHIP PENDING";
   return (
     <motion.section className="demoVerdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className="verdictJudge" initial={{ scale: .7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring" }}>
+        <div className="judgeAvatar large"><span>⚖</span><b>🤖</b><small>AI</small></div>
+        <div><small>THE HONORABLE ALGORITHM</small><strong>AI JUDGE A.L. GORE-ITHM</strong></div>
+        <motion.span className="gavel strike" animate={{ rotate: [0, -45, 12, 0], scale: [1, 1.18, 1] }} transition={{ duration: .8, delay: .35 }}>🔨</motion.span>
+      </motion.div>
       <span>JURY VOTE · {guiltyVotes}–{Math.max(0, totalVotes - guiltyVotes)}</span>
       <motion.h2 initial={{ scale: 1.8, rotate: -15 }} animate={{ scale: 1, rotate: -4 }}>{label}</motion.h2>
       <JuryPanel jurors={jurors} revealCount={revealCount} />
