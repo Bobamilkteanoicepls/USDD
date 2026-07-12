@@ -20,7 +20,7 @@ type RoleSwitchProps = {
 export function RoleSwitch({ activeRole, notificationCount = 0, onSwitch }: RoleSwitchProps) {
   const roleLabels: Record<DemoRole, string> = { becky: "Becky", elijah: "Elijah", public: "Community Juror" };
   return (
-    <div className="userSwitch" role="group" aria-label="Choose identity">
+    <div className="userSwitch" role="group" aria-label="Switch account">
       <small>ACCOUNT</small>
       {(["becky", "elijah", "public"] as DemoRole[]).map((role) => (
         <button
@@ -47,7 +47,7 @@ type DashboardShellProps = {
   title?: string;
   status?: string;
   children: React.ReactNode;
-  onSwitch: () => void;
+  onSwitch?: () => void;
 };
 
 export function DashboardShell({
@@ -81,9 +81,11 @@ export function DashboardShell({
           <h3>{title ?? `Welcome, ${meta.name}`}</h3>
           {status && <p>{status}</p>}
         </div>
-        <button className="outline" type="button" onClick={onSwitch}>
-          SWITCH ACCOUNT →
-        </button>
+        {onSwitch && (
+          <button className="outline" type="button" onClick={onSwitch}>
+            SWITCH ACCOUNT →
+          </button>
+        )}
       </div>
       {children}
     </motion.section>
@@ -137,7 +139,7 @@ export function NotificationInboxCard({
       </div>
       {!isRead ? <button className="primary" type="button" onClick={onOpen}>OPEN &amp; ACKNOWLEDGE NOTICE →</button> : <div>
           <button className="primary" type="button" onClick={onAppeal}>FILE AN APPEAL →</button>
-          <button className="outline" type="button" onClick={onSchool}>TAKE DATING SCHOOL</button>
+          <button className="outline" type="button" onClick={onSchool}>GO TO DATING SCHOOL</button>
         </div>}
     </motion.article>
   );
@@ -176,15 +178,15 @@ export function EvidenceUploader({
     setError("");
     if (!next) return;
     if (evidence.length >= 3) {
-      setError("The local evidence cabinet is full. Withdraw an exhibit before filing another.");
+      setError("The evidence cabinet is full. Withdraw an exhibit before filing another.");
       return;
     }
     if (!next.type.startsWith("image/")) {
-      setError("USDD accepts screenshot images only for this filing.");
+      setError("USDD accepts screenshot images only.");
       return;
     }
     if (next.size > 1200 * 1024) {
-      setError("Exhibit exceeds the 1.2 MB local evidence allowance.");
+      setError("Exhibit exceeds the 1.2 MB evidence allowance.");
       return;
     }
     const reader = new FileReader();
@@ -272,7 +274,7 @@ export function EvidenceUploader({
       </div>
 
       <button className="primary wide" type="button" disabled={disabled} onClick={onContinue}>
-        SEAL EVIDENCE & ENTER DATING COURT →
+        SEAL EVIDENCE &amp; ENTER DATING COURT →
       </button>
     </section>
   );
@@ -365,14 +367,12 @@ export function LiveHearing({
   const typingLine = revealed < chatScript.length ? chatScript[revealed] : null;
 
   return (
-    <section className="liveCourt courtHearingStage">
-      <button className="hearingSkip" type="button" onClick={skipAll} aria-label="Skip to jury reveal">
-        SKIP ANIMATION →
-      </button>
-      <div className="courtroomAtmosphere" aria-hidden="true">
-        <i>🏛️</i>
-        <span>COURT OF ROMANTIC APPEALS · IN SESSION</span>
-        <div><b>👀</b><b>😮</b><b>📝</b><b>🤨</b><b>🍿</b></div>
+    <section className="liveCourt">
+      <div className="courtroomAtmosphere" aria-hidden="true"><i>🏛️</i><span>COURT OF ROMANTIC APPEALS</span><div><b>👀</b><b>😮</b><b>📝</b><b>🤨</b><b>🍿</b></div></div>
+      <div className="courtLive" aria-live="polite">
+        <span>● LIVE · FICTIONAL HEARING</span>
+        <b>{minutes}:{seconds}</b>
+        <small>10-MINUTE HEARING WINDOW</small>
       </div>
       <motion.div className="judgeBench" initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }}>
         <div className="judgeAvatar"><span>⚖</span><b>🤖</b><small>AI</small></div>
@@ -485,9 +485,9 @@ export function LiveHearing({
           </motion.article>
         )) : <span>No exhibits filed. The group chat remains under subpoena.</span>}
       </div>
-
-      <button className="primary wide hearingCta" type="button" onClick={skipAll}>
-        {remaining > 0 ? "CLOSE ARGUMENTS EARLY · SUMMON JURY" : "REVEAL JURY VOTE"} →
+      <JuryPanel jurors={jurors} votingOpen={remaining === 0} onVote={onJurorVote} />
+      <button className="primary wide" type="button" onClick={onSkip}>
+        {remaining > 0 ? "CLOSE ARGUMENTS" : "REVEAL JURY VOTE"} →
       </button>
     </section>
   );
@@ -558,9 +558,27 @@ export function AIJudgeVerdictPanel({
       ? "EXIT COURTROOM · RETURN TO RECORD"
       : "EXIT COURTROOM";
   return (
-    <motion.section className="demoVerdict verdictStage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} aria-live="assertive">
-      <button className="hearingSkip" type="button" onClick={onContinue} aria-label="Skip verdict animation and exit courtroom">
-        SKIP →
+    <motion.section className="demoVerdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} aria-live="assertive">
+      <motion.div className="impactBurst" aria-hidden="true" initial={{ scale: 0, opacity: 1 }} animate={{ scale: 4, opacity: 0 }} transition={{ duration: 1, delay: .65 }}>💥</motion.div>
+      <motion.div className="verdictJudge" initial={{ scale: .7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring" }}>
+        <div className="judgeAvatar large"><span>⚖</span><b>🤖</b><small>AI</small></div>
+        <div><small>THE HONORABLE ALGORITHM</small><strong>AI JUDGE A.L. GORE-ITHM</strong></div>
+        <motion.span className="gavel strike" animate={{ rotate: [0, -45, 12, 0], scale: [1, 1.18, 1] }} transition={{ duration: .8, delay: .35 }}>🔨</motion.span>
+      </motion.div>
+      <div className="judgeStampStage" aria-label={`Official verdict stamp: ${label}`}>
+        <motion.div className="stampHandle" initial={{ y: -90, rotate: -14 }} animate={{ y: [-90, 8, -8, 0], rotate: [-14, 2, -3, 0] }} transition={{ duration: .8, delay: .85, times: [0,.58,.78,1] }}><span>USDD</span><b>♜</b></motion.div>
+        <motion.div className={`stampImpression ${verdict}`} initial={{ opacity: 0, scale: 1.7, rotate: -18 }} animate={{ opacity: [0,0,1], scale: [1.7,1.7,1], rotate: [-18,-18,-7] }} transition={{ duration: 1.15, delay: .45 }}>{label}<small>OFFICIAL-ISH VERDICT · CASE CLOSED</small></motion.div>
+        <motion.div className="inkBurst" aria-hidden="true" initial={{ opacity: 0, scale: .2 }} animate={{ opacity: [0,0,1,0], scale: [.2,.2,1.5,2] }} transition={{ duration: 1.2, delay: .83 }}>✦　✷　✦</motion.div>
+      </div>
+      <span>JURY VOTE · {guiltyVotes}–{Math.max(0, totalVotes - guiltyVotes)}</span>
+      <motion.h2 initial={{ scale: 2.4, rotate: -20, opacity: 0 }} animate={{ scale: [2.4,.88,1.08,1], rotate: [-20,-3,-6,-4], opacity: 1 }} transition={{ duration: .8, delay: .55 }}>{label}</motion.h2>
+      <JuryPanel jurors={jurors} revealCount={revealCount} />
+      <blockquote>
+        <b>AI JUDGE · SATIRICAL SUMMARY, NOT A REAL LEGAL DECISION</b>
+        {reasoning}
+      </blockquote>
+      <button className="primary" type="button" onClick={onContinue}>
+        {buttonLabel ?? (verdict === "guilty" ? "ENROLL IN DATING SCHOOL" : "RETURN TO CASE FILE")} →
       </button>
 
       <section className="verdictJurySequence" aria-label="Jury vote reveal">
@@ -785,7 +803,7 @@ export function RehabilitationDocuments({
         <h2>Certificate of Provisional Recyclability</h2>
         <p>This certifies that</p>
         <h3>{name.toUpperCase()}</h3>
-        <p>completed Dating School coursework and is eligible to re-enter the dating ecosystem under supervision.</p>
+        <p>completed Dating School and is eligible to re-enter the dating ecosystem under supervision.</p>
         <strong>90-DAY NO-GHOSTING PROBATION</strong>
         <div>
           <span>CASE NUMBER<b>{caseNumber}</b></span>

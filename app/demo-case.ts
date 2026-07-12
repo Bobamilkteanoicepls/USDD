@@ -147,6 +147,6 @@ export function issueNumber(prefix: string) {
 
 export function buildNotice(state: DemoCaseState): CaseNotification[] {
   const createdAt = now();
-  const message = `Becky classified you as Hazardous Non-Recyclable in fictional case ${state.caseNumber}. Request a Dating Court hearing or enroll in Dating School.`;
+  const message = `Becky classified you as Hazardous Non-Recyclable in fictional case ${state.caseNumber}. Log in to appeal or enroll in Dating School.`;
   return (["email", "sms", "in_app"] as const).map((channel) => ({ id: `notice-${channel}-${Date.now()}`, recipient: "elijah", channel, title: "Official USDD Classification Notice", message, createdAt, read: false }));
 }
