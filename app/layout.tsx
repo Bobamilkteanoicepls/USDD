@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Trash Your Ex — U.S. Department of Dating",
-  description: "America’s first emotionally responsible waste management service. Sort your past. Clear your future.",
+  title: "USDD — United States Department of Dating",
+  description: "Protecting America’s emotional infrastructure since 2026. A fictional government dating portal.",
   icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
 };
 
