@@ -4,6 +4,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import DemoWorkflow from "./demo-workflow";
+import { loadDemoCase, saveDemoCase, buildNotice } from "./demo-case";
 
 type View = "home"|"trash"|"record"|"court"|"school"|"registry";
 type Identity = "becky"|"elijah";
@@ -55,7 +56,8 @@ export default function Home(){
   const switchIdentity=(role:Identity)=>{setActiveIdentity(role);try{sessionStorage.setItem("usdd-demo-role",role)}catch{}setWarnDismissed(false);setView("home");setAccountMenu(false);setMenu(false);window.scrollTo({top:0,behavior:"smooth"})};
   const addRecord=()=>{const nm=form.name.trim();if(!nm){setPhase("sort");return}if(!records.some(r=>r.name.toLowerCase()===nm.toLowerCase())){const id=Date.now();setRecords([...records,mkEx(nm,id,`EX-2026-${String(Math.floor(10000+Math.random()*89999))}`,"unsorted",form.violations.length?form.violations:["Mixed Signals"],form.comment)]);}setPhase("sort")};
   const unsorted=records.filter(r=>r.classification==="unsorted"), current=unsorted[sortIndex]||unsorted[0];
-  const classify=(c:Classification)=>{if(!current)return;const isElijah=current.name==="Elijah";setRecords(rs=>rs.map(r=>r.id===current.id?{...r,classification:c}:r));setSortIndex(0);if(isElijah&&c==="hazardous")window.dispatchEvent(new CustomEvent("usdd-file-elijah"))};
+  const fileElijahSharedCase=()=>{try{const s=loadDemoCase();if(s.completed.filed)return;saveDemoCase({...s,classification:"hazardous",filedAt:new Date().toISOString(),notice:"delivered",notifications:buildNotice(s),completed:{...s.completed,filed:true,noticed:true}})}catch{}};
+  const classify=(c:Classification)=>{if(!current)return;const isElijah=current.name==="Elijah";setRecords(rs=>rs.map(r=>r.id===current.id?{...r,classification:c}:r));setSortIndex(0);if(isElijah&&c==="hazardous"){fileElijahSharedCase();window.dispatchEvent(new CustomEvent("usdd-file-elijah"))}};
   const expungeEx=(id:number)=>{const rec=records.find(r=>r.id===id);setRecords(rs=>rs.map(r=>r.id===id?{...r,expunged:true}:r));if(rec){setLastExpunged(rec.name);setExpungeShared(false)}};
   const shareCert=async()=>{const title="USDD Expungement Certificate";const text=`Becky’s official relationship count is now ${stats.official}. ${lastExpunged||"An ex"} has been lawfully-ish expunged.`;try{if(typeof navigator!=="undefined"&&navigator.share){await navigator.share({title,text,url:location.href});setExpungeShared(true)}else if(typeof navigator!=="undefined"&&navigator.clipboard){await navigator.clipboard.writeText(`${title}\n${text}\n${location.href}`);setExpungeShared(true)}}catch{}};
   const resetAll=()=>{["usdd-shared-case-v5","usdd-shared-case-updated","usdd-records-v2","usdd-demo-case"].forEach(k=>{try{localStorage.removeItem(k)}catch{}});["usdd-demo-role","usdd-demo-service"].forEach(k=>{try{sessionStorage.removeItem(k)}catch{}});setRecords(initialRecords());setForm({...ELIJAH_FORM});setActiveIdentity("becky");setView("home");setPhase("intake");setSortIndex(0);setLastExpunged(null);setExpungeShared(false);setWarnDismissed(false);setMenu(false);setAccountMenu(false);window.dispatchEvent(new CustomEvent("usdd-reset"));window.scrollTo({top:0,behavior:"smooth"})};
