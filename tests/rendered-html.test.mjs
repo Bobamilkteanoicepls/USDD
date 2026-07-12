@@ -34,6 +34,11 @@ test("ships the complete shared three-user case workflow", async () => {
   assert.match(components, /PROVISIONALLY RECYCLABLE/);
   assert.match(components, /RECORD EXPUNGED/);
   assert.match(workflow, /YOU ARE EMOTIONAL WASTE/);
+  const homepage = await read("app/page.tsx");
+  assert.match(homepage, /Who are you entering as/);
+  assert.match(homepage, /ENTER AS BECKY/);
+  assert.match(homepage, /ENTER AS ELIJAH/);
+  assert.match(homepage, /ENTER AS RANDOM JUROR/);
   assert.match(model, /publicJury:/);
   assert.match(workflow, /PublicJuryDocket/);
   assert.match(workflow, /PublicJuryCourt/);
