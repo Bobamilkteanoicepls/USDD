@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element */
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
@@ -86,6 +87,7 @@ type NotificationInboxCardProps = {
   caseNumber: string;
   claimantName: string;
   filedAt: string;
+  violations: string[];
   isRead: boolean;
   onOpen: () => void;
   onAppeal: () => void;
@@ -96,6 +98,7 @@ export function NotificationInboxCard({
   caseNumber,
   claimantName,
   filedAt,
+  violations,
   isRead,
   onOpen,
   onAppeal,
@@ -106,7 +109,6 @@ export function NotificationInboxCard({
       className="inbox"
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      onViewportEnter={() => !isRead && onOpen()}
     >
       <span className="urgent">OFFICIAL NOTICE · ACTION REQUIRED</span>
       <small>CASE {caseNumber} · FILED {filedAt}</small>
@@ -118,19 +120,18 @@ export function NotificationInboxCard({
         A fictional classification was submitted by {claimantName}. Allegations are claims by the
         filing party and have not been independently verified by USDD.
       </p>
+      <div className="noticeViolations" aria-label="Alleged violations">
+        {violations.map((violation) => <span key={violation}>🚩 {violation}</span>)}
+      </div>
       <div className="sentNotice">
         <b>NOTICE OF ROMANTIC MATERIAL CLASSIFICATION</b>
         <span>Response requested before the group chat reaches a verdict.</span>
         <small>You may appeal with evidence or voluntarily enroll in Ex Traffic School.</small>
       </div>
-      <div>
-        <button className="primary" type="button" onClick={onAppeal}>
-          FILE AN APPEAL →
-        </button>
-        <button className="outline" type="button" onClick={onSchool}>
-          TAKE TRAFFIC SCHOOL
-        </button>
-      </div>
+      {!isRead ? <button className="primary" type="button" onClick={onOpen}>OPEN &amp; ACKNOWLEDGE NOTICE →</button> : <div>
+          <button className="primary" type="button" onClick={onAppeal}>FILE AN APPEAL →</button>
+          <button className="outline" type="button" onClick={onSchool}>TAKE TRAFFIC SCHOOL</button>
+        </div>}
     </motion.article>
   );
 }
@@ -167,12 +168,16 @@ export function EvidenceUploader({
   const chooseFile = (next?: File) => {
     setError("");
     if (!next) return;
+    if (evidence.length >= 3) {
+      setError("The local demo cabinet is full. Withdraw an exhibit before filing another.");
+      return;
+    }
     if (!next.type.startsWith("image/")) {
       setError("USDD accepts screenshot images only for this demonstration.");
       return;
     }
-    if (next.size > 5 * 1024 * 1024) {
-      setError("Exhibit exceeds the fictional 5 MB evidence allowance.");
+    if (next.size > 1200 * 1024) {
+      setError("Exhibit exceeds the 1.2 MB local-demo evidence allowance.");
       return;
     }
     const reader = new FileReader();
@@ -216,7 +221,6 @@ export function EvidenceUploader({
         {preview && (
           <motion.div className="exhibits" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <article>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={preview} alt="New exhibit preview" />
               <span>
                 NEW EXHIBIT
@@ -245,7 +249,6 @@ export function EvidenceUploader({
       <div className="exhibits">
         {evidence.map((item, index) => (
           <motion.article key={item.id} layout initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={item.dataUrl} alt={item.caption || item.fileName} />
             <span>
               EXHIBIT {String.fromCharCode(65 + index)} · {item.owner === owner ? "YOUR FILING" : item.owner.toUpperCase()}
@@ -337,7 +340,7 @@ export function LiveHearing({
       <div className="courtEvidence">
         <b>EVIDENCE BEFORE THE COURT</b>
         {evidence.length ? evidence.map((item, index) => (
-          <motion.span key={item.id} initial={{ opacity: 0, rotate: -5, x: -25 }} animate={{ opacity: 1, rotate: index % 2 ? 2 : -1, x: 0 }} transition={{ delay: .5 + index * .15 }}>📎 EXHIBIT {String.fromCharCode(65 + index)} · {item.caption}</motion.span>
+          <motion.article className="courtExhibit" key={item.id} initial={{ opacity: 0, rotate: -5, x: -25 }} animate={{ opacity: 1, rotate: index % 2 ? 2 : -1, x: 0 }} transition={{ delay: .5 + index * .15 }}><img src={item.dataUrl} alt={item.caption}/><span>📎 EXHIBIT {String.fromCharCode(65 + index)}<b>{item.caption}</b><small>Filed by {item.owner === "becky" ? "Becky" : "Elijah"}</small></span></motion.article>
         )) : <span>No exhibits submitted. The group chat remains under subpoena.</span>}
       </div>
       <JuryPanel jurors={jurors} votingOpen={remaining === 0} onVote={onJurorVote} />
@@ -369,8 +372,8 @@ export function JuryPanel({ jurors, votingOpen = false, revealCount = 0, onVote 
             {!votingOpen && !revealed && <small className="deliberating">REVIEWING <b>•••</b></small>}
             {votingOpen && onVote && !juror.vote && (
               <div>
-                <button type="button" onClick={() => onVote(juror.id, "guilty")}>G</button>
-                <button type="button" onClick={() => onVote(juror.id, "not_guilty")}>NG</button>
+                <button type="button" aria-label={`${juror.name}: vote guilty`} onClick={() => onVote(juror.id, "guilty")}>GUILTY</button>
+                <button type="button" aria-label={`${juror.name}: vote not guilty`} onClick={() => onVote(juror.id, "not_guilty")}>NOT GUILTY</button>
               </div>
             )}
             {revealed && <small>{juror.vote === "guilty" ? "GUILTY" : "NOT GUILTY"}</small>}
@@ -403,13 +406,18 @@ export function AIJudgeVerdictPanel({
 }: AIJudgeVerdictPanelProps) {
   const label = verdict === "guilty" ? "STILL TRASH" : verdict === "appeal_granted" ? "APPEAL GRANTED" : "SITUATIONSHIP PENDING";
   return (
-    <motion.section className="demoVerdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+    <motion.section className="demoVerdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} aria-live="assertive">
       <motion.div className="impactBurst" aria-hidden="true" initial={{ scale: 0, opacity: 1 }} animate={{ scale: 4, opacity: 0 }} transition={{ duration: 1, delay: .65 }}>💥</motion.div>
       <motion.div className="verdictJudge" initial={{ scale: .7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring" }}>
         <div className="judgeAvatar large"><span>⚖</span><b>🤖</b><small>AI</small></div>
         <div><small>THE HONORABLE ALGORITHM</small><strong>AI JUDGE A.L. GORE-ITHM</strong></div>
         <motion.span className="gavel strike" animate={{ rotate: [0, -45, 12, 0], scale: [1, 1.18, 1] }} transition={{ duration: .8, delay: .35 }}>🔨</motion.span>
       </motion.div>
+      <div className="judgeStampStage" aria-label={`Official verdict stamp: ${label}`}>
+        <motion.div className="stampHandle" initial={{ y: -90, rotate: -14 }} animate={{ y: [-90, 8, -8, 0], rotate: [-14, 2, -3, 0] }} transition={{ duration: .8, delay: .85, times: [0,.58,.78,1] }}><span>USDD</span><b>♜</b></motion.div>
+        <motion.div className={`stampImpression ${verdict}`} initial={{ opacity: 0, scale: 1.7, rotate: -18 }} animate={{ opacity: [0,0,1], scale: [1.7,1.7,1], rotate: [-18,-18,-7] }} transition={{ duration: 1.15, delay: .45 }}>{label}<small>OFFICIAL-ISH VERDICT · CASE CLOSED</small></motion.div>
+        <motion.div className="inkBurst" aria-hidden="true" initial={{ opacity: 0, scale: .2 }} animate={{ opacity: [0,0,1,0], scale: [.2,.2,1.5,2] }} transition={{ duration: 1.2, delay: .83 }}>✦　✷　✦</motion.div>
+      </div>
       <span>JURY VOTE · {guiltyVotes}–{Math.max(0, totalVotes - guiltyVotes)}</span>
       <motion.h2 initial={{ scale: 2.4, rotate: -20, opacity: 0 }} animate={{ scale: [2.4,.88,1.08,1], rotate: [-20,-3,-6,-4], opacity: 1 }} transition={{ duration: .8, delay: .55 }}>{label}</motion.h2>
       <JuryPanel jurors={jurors} revealCount={revealCount} />

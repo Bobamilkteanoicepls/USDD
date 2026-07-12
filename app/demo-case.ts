@@ -1,5 +1,5 @@
 export type DemoRole = "becky" | "elijah";
-export type CaseClassification = "unfiled" | "hazardous" | "provisionally_recyclable" | "expunged";
+export type CaseClassification = "unfiled" | "hazardous" | "recyclable" | "provisionally_recyclable" | "certified_recyclable" | "expunged";
 export type NoticeState = "not_sent" | "delivered" | "read";
 export type AppealState = "not_filed" | "filed" | "hearing" | "decided";
 export type HearingPhase = "not_started" | "arguments" | "voting" | "decided";
@@ -44,7 +44,7 @@ export type DatingRecordItem = {
 };
 
 export type DemoCaseState = {
-  version: 3;
+  version: 4;
   activeRole: DemoRole;
   activeService: "dashboard" | "notifications" | "evidence" | "court" | "school" | "record" | "documents";
   caseNumber: string;
@@ -61,13 +61,13 @@ export type DemoCaseState = {
   jurors: Juror[];
   verdict: null | { result: "guilty" | "appeal_granted" | "hung_jury"; reasoning: string; decidedAt: string };
   school: { state: SchoolState; lessonIndex: number; questionIndex: number; answers: number[]; score: number; attempts: number };
-  documents: { rehabilitationNumber: string | null; expungementNumber: string | null; issuedAt: string | null; shared: boolean };
+  documents: { rehabilitationNumber: string | null; rehabilitationIssuedAt: string | null; expungementNumber: string | null; expungementIssuedAt: string | null; shared: boolean };
   beckyRecords: DatingRecordItem[];
   completed: { filed: boolean; noticed: boolean; evidence: boolean; heard: boolean; voted: boolean; school: boolean; expunged: boolean };
 };
 
 const now = () => new Date().toISOString();
-export const DEMO_STORAGE_KEY = "usdd-shared-case-v3";
+export const DEMO_STORAGE_KEY = "usdd-shared-case-v4";
 export const DEMO_EVENT_KEY = "usdd-shared-case-updated";
 
 export const DEMO_QUIZ: QuizQuestion[] = [
@@ -78,7 +78,7 @@ export const DEMO_QUIZ: QuizQuestion[] = [
 
 export function createInitialDemoCase(): DemoCaseState {
   return {
-    version: 3,
+    version: 4,
     activeRole: "becky",
     activeService: "dashboard",
     caseNumber: "EX-2026-00421",
@@ -95,7 +95,7 @@ export function createInitialDemoCase(): DemoCaseState {
     jurors: ["JuryDutyBae92", "Patricia from HR", "@redflagdetective", "The Group Chat", "A Therapist-ish"].map((name, index) => ({ id: `juror-${index + 1}`, name, vote: null })),
     verdict: null,
     school: { state: "not_enrolled", lessonIndex: 0, questionIndex: 0, answers: [], score: 0, attempts: 0 },
-    documents: { rehabilitationNumber: null, expungementNumber: null, issuedAt: null, shared: false },
+    documents: { rehabilitationNumber: null, rehabilitationIssuedAt: null, expungementNumber: null, expungementIssuedAt: null, shared: false },
     beckyRecords: ["Noah", "Marcus", "Jamie", "Elijah"].map((name, index) => ({ id: `record-${index + 1}`, name, caseNumber: name === "Elijah" ? "EX-2026-00421" : undefined, archived: false })),
     completed: { filed: false, noticed: false, evidence: false, heard: false, voted: false, school: false, expunged: false },
   };
@@ -116,7 +116,7 @@ export function loadDemoCase(): DemoCaseState {
     const raw = localStorage.getItem(DEMO_STORAGE_KEY);
     if (!raw) return createInitialDemoCase();
     const parsed = JSON.parse(raw) as Partial<DemoCaseState>;
-    if (parsed.version !== 3) return createInitialDemoCase();
+    if (parsed.version !== 4) return createInitialDemoCase();
     return { ...createInitialDemoCase(), ...parsed } as DemoCaseState;
   } catch {
     return createInitialDemoCase();
@@ -126,7 +126,8 @@ export function loadDemoCase(): DemoCaseState {
 export function caseAwareReasoning(state: DemoCaseState) {
   const guiltyVotes = state.jurors.filter((juror) => juror.vote === "guilty").length;
   const exhibitText = state.evidence.length === 1 ? "one screenshot exhibit" : `${state.evidence.length} screenshot exhibits`;
-  return `The simulated court reviewed ${exhibitText}, Becky’s allegation of ${state.violations[0].toLowerCase()}, and Elijah’s defense that “${state.respondent.defense}” The five-person jury returned ${guiltyVotes} guilty vote${guiltyVotes === 1 ? "" : "s"}. USDD therefore finds that emotional buffering is not a recognized substitute for communication. This is a fictional demonstration outcome, not a factual finding.`;
+  const captions = state.evidence.length ? ` Filed exhibits were described as: ${state.evidence.map((item) => item.caption).join("; ")}.` : "";
+  return `The simulated court reviewed ${exhibitText}, Becky’s statement (“${state.claimant.statement}”), Elijah’s response (“${state.respondent.statement}”), the allegation of ${state.violations[0].toLowerCase()}, and Elijah’s defense that “${state.respondent.defense}”${captions} The five-person jury returned ${guiltyVotes} guilty vote${guiltyVotes === 1 ? "" : "s"}. USDD therefore finds that emotional buffering is not a recognized substitute for communication. This is a fictional demonstration outcome, not a factual finding.`;
 }
 
 export function officialRelationshipCount(state: DemoCaseState) {

@@ -4,7 +4,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import DemoWorkflow from "./demo-workflow";
-import { DEMO_STORAGE_KEY, createInitialDemoCase } from "./demo-case";
 
 type View = "home"|"demo"|"trash"|"court"|"school"|"record"|"registry"|"license";
 type Classification = "unsorted"|"recyclable"|"hazardous"|"provisionally_recyclable"|"certified_recyclable";
@@ -57,7 +56,7 @@ export default function Home(){
   useEffect(()=>localStorage.setItem("usdd-demo-case",JSON.stringify({stage:demoStage,evidence:demoEvidence,beckyStatement,elijahStatement})),[demoStage,demoEvidence,beckyStatement,elijahStatement]);
   useEffect(()=>{if(demoStage!=="hearing"||hearingTime<=0)return;const t=setInterval(()=>setHearingTime(x=>x-1),1000);return()=>clearInterval(t)},[demoStage,hearingTime]);
   const stats=useMemo(()=>{const active=records.filter(r=>!r.expunged), hazardous=active.filter(r=>r.classification==="hazardous").length, certified=active.filter(r=>r.classification==="certified_recyclable").length, recyclable=active.filter(r=>r.classification==="recyclable").length, provisional=active.filter(r=>r.classification==="provisionally_recyclable").length; const vs=records.flatMap(r=>r.violations); const common=vs.sort((a,b)=>vs.filter(v=>v===b).length-vs.filter(v=>v===a).length)[0]||"None on file";return{total:records.length,hazardous,certified,recyclable,provisional,expunged:records.filter(r=>r.expunged).length,official:active.length,rate:records.length?Math.round((certified+recyclable+provisional)/records.length*100):0,common}},[records]);
-  const nav=(v:View)=>{const serviceMap:Partial<Record<View,"court"|"school"|"record"|"documents">>={court:"court",school:"school",record:"record",license:"documents"};const target=serviceMap[v];if(target){try{const current=JSON.parse(localStorage.getItem(DEMO_STORAGE_KEY)||JSON.stringify(createInitialDemoCase()));localStorage.setItem(DEMO_STORAGE_KEY,JSON.stringify({...current,activeService:target}));window.dispatchEvent(new StorageEvent("storage",{key:DEMO_STORAGE_KEY}))}catch{}setView("demo")}else setView(v);setMenu(false);window.scrollTo({top:0,behavior:"smooth"})};
+  const nav=(v:View)=>{const serviceMap:Partial<Record<View,"court"|"school"|"record"|"documents">>={court:"court",school:"school",record:"record",license:"documents"};const target=serviceMap[v];if(target){try{sessionStorage.setItem("usdd-demo-service",target);window.dispatchEvent(new CustomEvent("usdd-navigate-service",{detail:target}))}catch{}setView("demo")}else setView(v);setMenu(false);window.scrollTo({top:0,behavior:"smooth"})};
   const addRecord=()=>{if(!form.name.trim())return;const x=newEx(form.name.trim());x.age=+form.age||29;x.location=form.location;x.relationshipType=form.type;x.relationshipLength=form.length;x.comment=form.comment;x.violations=form.violations.length?form.violations:["Mixed Signals"];setRecords([...records,x]);setForm({...form,name:"",comment:"",violations:[]})};
   const unsorted=records.filter(r=>r.classification==="unsorted"), current=unsorted[sortIndex]||unsorted[0];
   const classify=(c:Classification)=>{if(!current)return;setRecords(rs=>rs.map(r=>r.id===current.id?{...r,classification:c}:r));setSortIndex(0)};

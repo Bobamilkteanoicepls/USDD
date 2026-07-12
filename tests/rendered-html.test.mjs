@@ -27,6 +27,9 @@ test("ships the complete shared two-user case workflow", async () => {
   assert.match(workflow, /ExpungementCertificate/);
   assert.match(components, /navigator\.share/);
   assert.match(components, /navigator\.clipboard\.writeText/);
+  assert.match(components, /judgeStampStage/);
+  assert.match(components, /stampImpression/);
+  assert.match(workflow, /YOU ARE EMOTIONAL WASTE/);
 });
 
 test("keeps the Vercel static release deployable", async () => {
