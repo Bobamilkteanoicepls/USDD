@@ -92,17 +92,17 @@ export default function Home() {
   };
 
   const fileEx = () => setTrashPhase("classify");
-  const fileElijahNotice = () => {
-    const base = loadDemoCase();
+  const ensureElijahFiling = (base: DemoCaseState): DemoCaseState => {
+    if (base.completed.filed && base.classification !== "unfiled") return base;
+
     const filedAt = new Date().toISOString();
-    const next: DemoCaseState = {
+    const filedCase: DemoCaseState = {
       ...base,
       claimant: { ...base.claimant, statement: form.comment },
       violations: form.violations,
       classification: "hazardous",
       filedAt,
       notice: "delivered",
-      notifications: buildNotice({ ...base, violations: form.violations }),
       appeal: "not_filed",
       verdict: null,
       hearing: { phase: "not_started", startedAt: null, durationSeconds: 5, revealCount: 0 },
@@ -110,7 +110,11 @@ export default function Home() {
       completed: { ...base.completed, filed: true, noticed: true, heard: false, voted: false, school: false, expunged: false },
       beckyRecords: base.beckyRecords.map((record) => record.name === "Elijah" ? { ...record, archived: false } : record),
     };
-    persist(next);
+
+    return { ...filedCase, notifications: buildNotice(filedCase) };
+  };
+  const fileElijahNotice = () => {
+    persist(ensureElijahFiling(loadDemoCase()));
   };
   const currentEx = prefilledExes[sortIndex];
   const classifyCurrent = (classification: "recyclable" | "hazardous") => {
@@ -123,12 +127,14 @@ export default function Home() {
   };
 
   const requestCourt = () => {
-    const next = { ...caseState, appeal: "filed" as const, notice: "read" as const, hearing: { ...caseState.hearing, phase: "not_started" as const, durationSeconds: 5 } };
+    const filedCase = ensureElijahFiling(caseState);
+    const next = { ...filedCase, appeal: "filed" as const, notice: "read" as const, hearing: { ...filedCase.hearing, phase: "not_started" as const, durationSeconds: 5 } };
     persist(next);
     navigate("court");
   };
   const enrollSchool = () => {
-    persist({ ...caseState, school: { ...caseState.school, state: "lessons", lessonIndex: 0, questionIndex: 0, answers: [], score: 0 } });
+    const filedCase = ensureElijahFiling(caseState);
+    persist({ ...filedCase, notice: "read", school: { ...filedCase.school, state: "lessons", lessonIndex: 0, questionIndex: 0, answers: [], score: 0 } });
     setSchoolStep(0);
     navigate("school");
   };
@@ -168,7 +174,6 @@ export default function Home() {
 
   const officialCount = caseState.beckyRecords.filter((record) => !record.archived).length;
   const canExpunge = caseState.verdict?.result === "guilty" && !caseState.completed.expunged;
-  const elijahHasFiledCase = caseState.completed.filed || caseState.notice !== "not_sent" || caseState.classification !== "unfiled";
   const account = identity === "becky" ? { initial: "B", name: "Becky", detail: "Claimant" } : { initial: "E", name: "Elijah", detail: "Respondent" };
   const courtStatus: "filed" | "hearing" | "verdict" = caseState.verdict ? "verdict" : caseState.appeal === "filed" ? "hearing" : "filed";
   const navItems: Array<[View, string]> = [["home", "Home"], ["trash", "Trash Your Ex"], ["record", "Dating Record"], ["court", "Dating Court"], ["school", "Dating School"], ["registry", "Registry"]];
@@ -189,7 +194,7 @@ export default function Home() {
       {view === "home" && <Page pageKey={`home-${identity}`}>
         <div className="psa"><b>PUBLIC SERVICE ANNOUNCEMENT</b><span>Summer situationship season is now in effect.</span><em>Advisory Level: Guarded 🚩</em></div>
         <section className="homeHero"><div><div className="kicker">THE UNITED STATES OF EMOTIONAL AMERICA</div><h1>UNITED STATES<br /><em>DEPARTMENT OF DATING</em></h1><p>{identity === "becky" ? "Protecting America’s emotional infrastructure since 2026." : "Welcome back, Elijah. Your emotional record requires attention."}</p><div className="heroBtns"><button className="primary" onClick={() => navigate(identity === "becky" ? "trash" : "court")}>{identity === "becky" ? "TRASH YOUR EX →" : "OPEN MY CASE →"}</button><button className="outline" onClick={() => navigate("registry")}>SEARCH REGISTRY</button></div><small>⚑ This is satire. Please do not contact your senator.</small></div><div className="heroSeal"><Seal /><div>ESTABLISHED 2026<br />WASHINGTON, D.C.(ISH)</div></div></section>
-        {identity === "elijah" && elijahHasFiledCase && <motion.div className={`classificationPopup ${caseState.completed.expunged ? "archivedNotice" : ""}`} initial={{ opacity: 0, scale: .92, y: 25 }} animate={{ opacity: 1, scale: 1, y: 0 }} role="dialog" aria-label="Official classification warning"><span>{caseState.completed.expunged ? "✓ ARCHIVED CASE NOTICE" : "⚠ ACTION REQUIRED · OFFICIAL CLASSIFICATION NOTICE"}</span><h2>BECKY HAS FILED YOU AS<br />HAZARDOUS.</h2><strong>{caseState.completed.expunged ? "CASE EXPUNGED · ARCHIVED" : "HAZARDOUS · NON-RECYCLABLE"}</strong><p>{caseState.completed.expunged ? "The filing was expunged from Becky’s official dating count, but your archived case history remains available here." : "Go to Dating Court to contest the accusation, or take Dating School to begin emotional rehabilitation."}</p><div>{caseState.completed.expunged ? <><button className="primary" onClick={() => navigate("court")}>REVIEW ARCHIVED CASE</button><button className="outline" onClick={() => navigate("registry")}>BROWSE REGISTRY</button></> : <><button className="primary" onClick={requestCourt}>GO TO DATING COURT</button><button className="outline" onClick={enrollSchool}>TAKE DATING SCHOOL</button></>}</div><small>Claimant-submitted satire. Not a factual finding.</small></motion.div>}
+        {identity === "elijah" && <motion.div className={`classificationPopup ${caseState.completed.expunged ? "archivedNotice" : ""}`} initial={{ opacity: 0, scale: .92, y: 25 }} animate={{ opacity: 1, scale: 1, y: 0 }} role="dialog" aria-label="Official classification warning"><span>{caseState.completed.expunged ? "✓ ARCHIVED CASE NOTICE" : "⚠ ACTION REQUIRED · OFFICIAL CLASSIFICATION NOTICE"}</span><h2>BECKY HAS FILED YOU AS<br />HAZARDOUS.</h2><strong>{caseState.completed.expunged ? "CASE EXPUNGED · ARCHIVED" : "HAZARDOUS · NON-RECYCLABLE"}</strong><p>{caseState.completed.expunged ? "The filing was expunged from Becky’s official dating count, but your archived case history remains available here." : "Go to Dating Court to contest the accusation, or take Dating School to begin emotional rehabilitation."}</p><div>{caseState.completed.expunged ? <><button className="primary" onClick={() => navigate("court")}>REVIEW ARCHIVED CASE</button><button className="outline" onClick={() => navigate("registry")}>BROWSE REGISTRY</button></> : <><button className="primary" onClick={requestCourt}>GO TO DATING COURT</button><button className="outline" onClick={enrollSchool}>TAKE DATING SCHOOL</button></>}</div><small>Claimant-submitted satire. Not a factual finding.</small></motion.div>}
       </Page>}
 
       {view === "trash" && <Page pageKey="trash"><ServiceHead code="TYE-01" title="Trash Your Ex" desc="Properly classify emotionally hazardous relationship material." /><div className="subnav"><button className={trashPhase === "intake" ? "active" : ""}>1. Intake</button><button className={trashPhase === "classify" ? "active" : ""}>2. Classification</button></div>
