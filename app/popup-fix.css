@@ -1,0 +1,3 @@
+.classificationPopup.archivedNotice{border-top-color:var(--green)}
+.classificationPopup.archivedNotice>span,.classificationPopup.archivedNotice>strong{color:var(--green)}
+.classificationPopup.archivedNotice>strong{border-color:var(--green)}
